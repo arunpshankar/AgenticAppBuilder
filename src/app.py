@@ -1,9 +1,10 @@
-import os
-import time
-import pandas as pd
-import streamlit as st
-from sqlalchemy import create_engine, text
 from agents.ideation import run_ideation
+from sqlalchemy import create_engine
+from sqlalchemy import text
+import streamlit as st
+import pandas as pd
+import os
+
 
 # Configurations
 DATA_DIR = 'data'
@@ -12,6 +13,7 @@ CSV_PATH = os.path.join(DATA_DIR, 'apis.csv')
 
 # Setup the database engine
 engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
+
 
 def purge_and_load_csv(csv_path):
     # Purge DB: drop table if exists
@@ -26,11 +28,13 @@ def purge_and_load_csv(csv_path):
     # Load DataFrame into SQL table
     df.to_sql('apientry', con=engine, if_exists='replace', index=False)
 
+
 def get_entries():
     with engine.connect() as conn:
         result = conn.execute(text("SELECT * FROM apientry"))
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
     return df
+
 
 def main():
     st.set_page_config(page_title="Agentic App Builder", layout="centered", page_icon="💡")
@@ -90,6 +94,7 @@ def main():
         with logs_expanded:
             for log in st.session_state.logs:
                 logs_area.write(log)
+                
 
 if __name__ == "__main__":
     main()
