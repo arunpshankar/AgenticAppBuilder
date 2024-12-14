@@ -1,29 +1,23 @@
-import os
-import time
-import logging
-from typing import Tuple, List, Dict
 
-import pandas as pd
-import streamlit as st
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
-
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import SQLAlchemyError
 from agents.ideation import run_ideation
+from src.config.logging import logger 
+from sqlalchemy import create_engine
+from sqlalchemy import text 
+from typing import Tuple
+import streamlit as st
+import pandas as pd
+import time
+import os
 
-# Set up logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='[%(levelname)s] %(asctime)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 
-# Configuration
+# Configuration 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 DB_DIR = os.path.join(PROJECT_ROOT, 'db')
 DB_PATH = os.path.join(DB_DIR, 'apis.db')  # Ensure this line appears before using DB_PATH
-
 CSV_PATH = os.path.join(DATA_DIR, 'apis.csv')
 IMAGES_DIR = os.path.join(BASE_DIR, 'images')
 GOOGLE_ICON_PATH = os.path.join(IMAGES_DIR, 'google_icon.png')
@@ -58,32 +52,32 @@ def purge_and_load_csv(csv_path: str) -> Tuple[bool, str]:
     :param csv_path: Path to the CSV file.
     :return: (success, message) indicating if the operation was successful and a description message.
     """
-    logging.debug("Loading CSV from path: %s", csv_path)
+    logger.debug("Loading CSV from path: %s", csv_path)
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
-        logging.error("Failed to read CSV: %s", e)
+        logger.error("Failed to read CSV: %s", e)
         return False, f"Failed to read CSV: {e}"
 
     is_valid, msg = validate_csv(df)
     if not is_valid:
-        logging.error("CSV validation failed: %s", msg)
+        logger.error("CSV validation failed: %s", msg)
         return False, msg
 
     try:
         with engine.connect() as conn:
             conn.execute(text("DROP TABLE IF EXISTS apientry"))
         df.to_sql('apientry', con=engine, if_exists='replace', index=False)
-        logging.debug("CSV successfully loaded into the database.")
+        logger.debug("CSV successfully loaded into the database.")
         return True, "CSV uploaded and database reloaded successfully!"
     except OperationalError as oe:
-        logging.error("Database operational error: %s", oe)
+        logger.error("Database operational error: %s", oe)
         return False, f"Database error: {oe}"
     except SQLAlchemyError as sqle:
-        logging.error("SQLAlchemy error: %s", sqle)
+        logger.error("SQLAlchemy error: %s", sqle)
         return False, f"Database error: {sqle}"
     except Exception as e:
-        logging.error("General error loading CSV into DB: %s", e)
+        logger.error("General error loading CSV into DB: %s", e)
         return False, f"Unknown error loading CSV: {e}"
 
 
@@ -94,17 +88,17 @@ def get_entries() -> pd.DataFrame:
     :return: DataFrame containing the entries, or an empty DataFrame if none.
     """
     if not os.path.exists(DB_PATH):
-        logging.debug("Database file does not exist. Returning empty DataFrame.")
+        logger.debug("Database file does not exist. Returning empty DataFrame.")
         return pd.DataFrame()
 
-    logging.debug("Fetching entries from the database.")
+    logger.debug("Fetching entries from the database.")
     try:
         with engine.connect() as conn:
             result = conn.execute(text("SELECT * FROM apientry"))
             df = pd.DataFrame(result.fetchall(), columns=result.keys())
         return df
     except Exception as e:
-        logging.error("Failed to fetch entries: %s", e)
+        logger.error("Failed to fetch entries: %s", e)
         return pd.DataFrame()
 
 
@@ -153,9 +147,9 @@ def main():
                 f.write(uploaded_file.read())
         except Exception as e:
             st.error(f"Failed to save uploaded CSV: {e}")
-            logging.error("Failed to save uploaded CSV: %s", e)
+            logger.error("Failed to save uploaded CSV: %s", e)
         else:
-            logging.debug("CSV file uploaded successfully, attempting to load into DB.")
+            logger.debug("CSV file uploaded successfully, attempting to load into DB.")
             success, message = purge_and_load_csv(CSV_PATH)
             if success:
                 st.success(message)
@@ -177,7 +171,7 @@ def main():
     # Refresh entries if triggered
     if refresh_trigger:
         st.session_state["entries_df"] = get_entries()
-        logging.debug("Entries refreshed from the database.")
+        logger.debug("Entries refreshed from the database.")
 
     # Handle ideation process
     if ideate_trigger:
@@ -192,7 +186,7 @@ def main():
         for log_line in run_ideation():
             st.session_state["logs"].append(log_line)
             logs_area.write("\n".join(st.session_state["logs"]))
-            logging.debug("Ideation step: %s", log_line)
+            logger.debug("Ideation step: %s", log_line)
 
         # After streaming logs, simulate finalization and idea generation
         st.warning("Ideation completed. Generating ideas...")
@@ -217,7 +211,7 @@ def main():
             }
         ]
         st.success("Ideas generated!")
-        logging.debug("Ideas generated successfully.")
+        logger.debug("Ideas generated successfully.")
 
     # Show entries
     st.subheader("Available Entries")
@@ -243,5 +237,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error("Unhandled exception in main: %s", e)
+        logger.error("Unhandled exception in main: %s", e)
         st.error(f"An unexpected error occurred: {e}")
