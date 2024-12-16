@@ -183,9 +183,10 @@ def main():
         st.info("Ideation process started...")
 
         # Stream logs from the ideation generator
-        for log_line in run_ideation():
+        for log_line in run_ideation(engine=engine):
             st.session_state["logs"].append(log_line)
-            logs_area.write("\n".join(st.session_state["logs"]))
+            logs_area.write("\n".join(map(str, st.session_state["logs"])))
+
             logger.debug("Ideation step: %s", log_line)
 
         # After streaming logs, simulate finalization and idea generation
