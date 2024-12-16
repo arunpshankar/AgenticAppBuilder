@@ -1,14 +1,18 @@
-import os
-import json
-import time
-import pandas as pd
-import streamlit as st
-from typing import Tuple, List, Dict
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
-from sqlalchemy import create_engine, text
-from src.config.logging import logger
 from src.config.client import initialize_genai_client
+from sqlalchemy.exc import OperationalError 
 from src.llm.gemini import generate_content
+from sqlalchemy.exc import SQLAlchemyError
+from src.config.logging import logger
+from sqlalchemy import create_engine
+from sqlalchemy import text 
+from typing import Tuple
+from typing import List 
+from typing import Dict
+import streamlit as st
+import pandas as pd
+import time
+import os 
+
 
 # Configuration 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -363,29 +367,38 @@ def main():
     else:
         st.write("No entries available. Please upload a CSV.")
 
-    # Show ideas if available
     if st.session_state["ideas"]:
         st.subheader("Ideation Results")
         st.write("Select one or more ideas to build into an app:")
 
-        current_selected_ideas = []
-        for i, idea in enumerate(st.session_state["ideas"]):
-            if isinstance(idea, dict) and all(k in idea for k in ["title", "description", "apis_used"]):
-                selected = st.checkbox(idea['title'], value=False, key=f"idea_select_{i}")
-                if selected:
-                    current_selected_ideas.append(idea)
+        # Divide the list of ideas into rows of three
+        ideas = st.session_state["ideas"]
+        rows = (len(ideas) // 3) + (1 if len(ideas) % 3 > 0 else 0)
 
-                st.markdown(f"**{idea['title']}**")
-                st.write(idea["description"])
-                st.write("APIs Used:")
-                for api in idea["apis_used"]:
-                    st.markdown(f"- {api}")
-            else:
-                st.write("Idea format is invalid. Cannot display.")
+        current_selected_ideas = []
+        for row_i in range(rows):
+            cols = st.columns(3, gap="small")
+            for col_i in range(3):
+                idea_index = row_i * 3 + col_i
+                if idea_index < len(ideas):
+                    idea = ideas[idea_index]
+                    with cols[col_i]:
+                        # Render the idea as a card
+                        st.markdown(f"""
+                        <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:15px;">
+                            <h4 style="margin-top:0; margin-bottom:5px;">{idea['title']}</h4>
+                            <p style="margin-top:0; margin-bottom:10px;">{idea['description']}</p>
+                            <p style="margin-bottom:5px;"><strong>APIs Used:</strong> {", ".join(idea['apis_used'])}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        selected = st.checkbox("Select this idea", key=f"idea_select_{idea_index}")
+                        if selected:
+                            current_selected_ideas.append(idea)
 
         st.session_state["selected_ideas"] = current_selected_ideas
 
-        # Add a button to build the selected app(s)
+        # Build the selected app(s)
         if st.button("Build App"):
             if not st.session_state["selected_ideas"]:
                 st.warning("Please select at least one idea before building.")
@@ -395,6 +408,7 @@ def main():
                 save_app_code(frontend_code, backend_code)
                 st.success("App code generated and saved!")
                 st.session_state["app_built"] = True
+
 
     if st.session_state["app_built"]:
         st.subheader("Your App is Ready!")
