@@ -1,23 +1,35 @@
-You have the following application idea(s) that combine APIs:
+You have some application ideas that involve interacting with external APIs. Your goal is to create two Python modules inside `src/apps/{app_name_slug}/`:
 
+1. A **Streamlit frontend** (`frontend.py`) that:
+   - Provides a user interface for entering queries or parameters and initiating API calls.
+   - Uses **only Streamlit** for the frontend (no other UI frameworks).
+   - Imports the backend module as `import src.apps.{app_name_slug}.backend`
+   - Displays the results returned by the backend in a user-friendly format (e.g., JSON display).
+
+2. A **Python backend** (`backend.py`) that:
+   - Contains functions and/or classes to fetch and process data from one or more APIs.
+   - Uses only Python standard library modules for making API calls.
+   - Includes well-documented code explaining how the API calls are constructed and processed.
+   - Returns structured Python data to be displayed by the frontend, without running a server.
+   - avoid using  urllib instead use requests 
+   - avoid creating servers like using flask, fastapi, socketserver etc
+
+**Given Ideas:**
 {ideas_text}
 
-Please generate two code modules:
+**Database of Available APIs:**
+{entries_text}
 
-1. A Streamlit frontend (my_new_app_frontend.py) that provides a user interface to interact with the application(s).
-2. A Python backend (my_new_app_backend.py) that contains functions/classes to fetch and process data from the listed APIs.
+**Return Instructions:**
+- Return your code in plain text with the following markers:
+  ```
+  ---BEGIN FRONTEND CODE---
+  # frontend code here
+  ---END FRONTEND CODE---
 
-Return the code in plain text with clear markers. For example:
-
----BEGIN FRONTEND CODE---
-```python
-# frontend code here
----END FRONTEND CODE---
-
----BEGIN BACKEND CODE---
-```python
-# backend code here
-```
----END BACKEND CODE---
-
-Do not return JSON, just use these markers and code blocks.
+  ---BEGIN BACKEND CODE---
+  # backend code here
+  ---END BACKEND CODE---
+  ```
+- Do not include JSON responses outside of code blocks.
+- No server code, just API calls and processing.

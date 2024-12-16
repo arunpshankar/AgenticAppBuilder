@@ -175,7 +175,7 @@ def generate_ideas_with_llm(engine, num_ideas: int = 3) -> List[Dict]:
             "apis_used": []
         }]
 
-def generate_app_code_with_llm(selected_ideas: List[Dict]) -> Tuple[str, str]:
+def generate_app_code_with_llm(engine, selected_ideas: List[Dict], app_name_slug: str) -> Tuple[str, str]:
     gemini_client = initialize_genai_client()
     model_id = "gemini-2.0-flash-exp"
 
@@ -189,12 +189,27 @@ APIs Used: {", ".join(idea['apis_used'])}
 
     ideas_text = "\n\n".join(idea_descriptions)
 
+    # Fetch all DB entries for the full prompt context
+    df = get_entries()
+    if df.empty:
+        entries_text = "No entries found in the database."
+    else:
+        entries_text = "APIs Table:\n"
+        entries_text += df.to_csv(index=False)
+
     # Load code generation prompt template
     prompt_template_path = os.path.join(TEMPLATES_DIR, 'build.txt')
     with open(prompt_template_path, 'r', encoding='utf-8') as f:
         prompt_template = f.read()
 
-    prompt = prompt_template.format(ideas_text=ideas_text)
+    # Update the prompt to reflect new naming and import instructions
+    # We'll include instructions in the prompt that the frontend should do:
+    # `import src.apps.<app_name_slug>.backend`
+    prompt = prompt_template.format(
+        ideas_text=ideas_text, 
+        entries_text=entries_text, 
+        app_name_slug=app_name_slug
+    )
 
     logger.debug("Constructing prompt for app code generation.")
     try:
@@ -226,12 +241,12 @@ APIs Used: {", ".join(idea['apis_used'])}
         logger.error("Failed to generate app code with LLM: %s", e)
         return "# Error generating frontend code", "# Error generating backend code"
 
-def save_app_code(frontend_code: str, backend_code: str):
-    apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps')
+def save_app_code(app_name_slug: str, frontend_code: str, backend_code: str):
+    apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
     os.makedirs(apps_dir, exist_ok=True)
 
-    frontend_path = os.path.join(apps_dir, 'my_new_app_frontend.py')
-    backend_path = os.path.join(apps_dir, 'my_new_app_backend.py')
+    frontend_path = os.path.join(apps_dir, 'frontend.py')
+    backend_path = os.path.join(apps_dir, 'backend.py')
 
     with open(frontend_path, 'w', encoding='utf-8') as f:
         f.write(frontend_code)
@@ -403,16 +418,26 @@ def main():
             if not st.session_state["selected_ideas"]:
                 st.warning("Please select at least one idea before building.")
             else:
-                st.info("Generating application code. Please wait...")
-                frontend_code, backend_code = generate_app_code_with_llm(st.session_state["selected_ideas"])
-                save_app_code(frontend_code, backend_code)
-                st.success("App code generated and saved!")
-                st.session_state["app_built"] = True
+                st.info("Preparing to generate application code. Please wait...")
 
+                # Derive app name and create subfolder before generation
+                if st.session_state["selected_ideas"]:
+                    app_name = st.session_state["selected_ideas"][0]['title']
+                else:
+                    app_name = "my_new_app"
+                app_name_slug = app_name.lower().replace(" ", "_")
+                apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
+                os.makedirs(apps_dir, exist_ok=True)
+
+                st.info("Generating application code. Please wait...")
+                frontend_code, backend_code = generate_app_code_with_llm(engine, st.session_state["selected_ideas"], app_name_slug)
+                save_app_code(app_name_slug, frontend_code, backend_code)
+                st.success(f"App code generated and saved in `src/apps/{app_name_slug}/`!")
+                st.session_state["app_built"] = True
 
     if st.session_state["app_built"]:
         st.subheader("Your App is Ready!")
-        st.markdown("The generated code has been saved in `./src/apps/` directory.")
+        st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directory.")
         st.markdown("You can now integrate and run it locally, or further refine the code.")
 
 if __name__ == "__main__":
