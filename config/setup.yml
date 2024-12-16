@@ -1,0 +1,6 @@
+# Project-level configuration
+project_id: arun-genai-bb
+credentials_json: ./credentials/key.json
+region: us-central1
+bucket_name: gemma-adapter-bucket
+staging_bucket_name: gemma-adapter-staging-bucket
