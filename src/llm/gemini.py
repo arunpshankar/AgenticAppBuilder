@@ -3,6 +3,7 @@ from src.config.logging import logger
 from google import genai
 import time
 
+
 def generate_content(client: genai.Client, model_id: str, prompt: str) -> str:
     """
     Generates content using the GenAI client and specified model.
@@ -31,6 +32,7 @@ def generate_content(client: genai.Client, model_id: str, prompt: str) -> str:
         logger.error(f"Failed to generate content: {e}")
         raise
 
+
 def count_tokens(client: genai.Client, model_id: str, prompt: str) -> int:
     """
     Counts the number of tokens in the input prompt using the GenAI client.
@@ -54,6 +56,7 @@ def count_tokens(client: genai.Client, model_id: str, prompt: str) -> int:
     except Exception as e:
         logger.error(f"Failed to count tokens: {e}")
         raise
+
 
 if __name__ == "__main__":
     try:
