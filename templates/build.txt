@@ -1,0 +1,23 @@
+You have the following application idea(s) that combine APIs:
+
+{ideas_text}
+
+Please generate two code modules:
+
+1. A Streamlit frontend (my_new_app_frontend.py) that provides a user interface to interact with the application(s).
+2. A Python backend (my_new_app_backend.py) that contains functions/classes to fetch and process data from the listed APIs.
+
+Return the code in plain text with clear markers. For example:
+
+---BEGIN FRONTEND CODE---
+```python
+# frontend code here
+---END FRONTEND CODE---
+
+---BEGIN BACKEND CODE---
+```python
+# backend code here
+```
+---END BACKEND CODE---
+
+Do not return JSON, just use these markers and code blocks.

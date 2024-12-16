@@ -1,0 +1,18 @@
+You have access to a set of APIs. Each API has a name, category, and description:
+
+{apis_summary}
+
+Please propose {num_ideas} innovative application ideas that combine these APIs in interesting ways.
+For each idea, provide:
+- A short title
+- A brief description
+- The names of the APIs it would use
+
+Return the ideas in plain text, each idea separated by a blank line.
+Format each idea like this:
+
+Title: <Title here>
+Description: <Description here>
+APIs Used: <Comma-separated list of APIs here>
+
+Do not return JSON, just return the ideas as text.
