@@ -1,12 +1,14 @@
-import time
-import logging
-from typing import Dict, List
-from sqlalchemy.engine.base import Engine
-from sqlalchemy import text
-
 from src.config.client import initialize_genai_client
 from src.llm.gemini import generate_content
+from sqlalchemy.engine.base import Engine
 from src.config.logging import logger
+from sqlalchemy import create_engine
+from sqlalchemy import text
+from typing import Dict
+from typing import List 
+import pandas as pd 
+import time
+
 
 def run_ideation(engine: Engine) -> List[Dict]:
     """
@@ -141,9 +143,6 @@ Return your answer as a JSON list, where each element is a dictionary with keys:
     return prompt
 
 if __name__ == '__main__':
-    from sqlalchemy import create_engine
-    import pandas as pd 
-
     # Create an in-memory SQLite DB for testing. Adjust as needed.
     engine = create_engine('sqlite:///test.db', echo=False)
 
@@ -158,5 +157,3 @@ if __name__ == '__main__':
             final_ideas = item[1]  # Capture the ideas
         else:
             print(item)
-
-    print("Final Ideas:", final_ideas)
