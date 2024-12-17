@@ -7,16 +7,13 @@ from src.utils.io import save_app_code
 from src.config.setup import CSV_PATH
 from src.config.logging import logger
 from src.db.crud import get_entries
-from typing import Generator
-from typing import Union
-from typing import Tuple 
-from typing import List 
+from typing import Generator, Union, Tuple, List
 import streamlit as st
-import importlib.util
-import pandas as pd 
+import pandas as pd
 import time
 import os
-
+import importlib.util
+from concurrent.futures import ThreadPoolExecutor
 
 def load_available_apps():
     """
@@ -36,6 +33,7 @@ def load_available_apps():
             if os.path.isdir(d_path):
                 frontend_path = os.path.join(d_path, "frontend.py")
                 if os.path.exists(frontend_path):
+                    # Store relative path so run_app can locate it
                     st.session_state["available_apps"][entry] = os.path.relpath(frontend_path, start='.')
 
 def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dict]]], None, None]:
@@ -62,7 +60,6 @@ def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dic
     
     yield ("IDEAS_RESULT", ideas)
 
-
 def handle_csv_upload(uploaded_file) -> None:
     if uploaded_file is not None:
         try:
@@ -81,7 +78,6 @@ def handle_csv_upload(uploaded_file) -> None:
         else:
             st.error(message)
 
-
 def display_entries(entries_df: pd.DataFrame) -> None:
     st.subheader("Available Entries")
     if entries_df is not None and not entries_df.empty:
@@ -89,10 +85,9 @@ def display_entries(entries_df: pd.DataFrame) -> None:
     else:
         st.write("No entries available. Please upload a CSV.")
 
-
 def display_ideas(ideas: List[dict]) -> None:
     st.subheader("Ideation Results")
-    st.write("Select one or more ideas to build into an app:")
+    st.write("Select one or more ideas to build into separate apps:")
 
     rows = (len(ideas) // 3) + (1 if len(ideas) % 3 > 0 else 0)
     current_selected_ideas = []
@@ -117,6 +112,18 @@ def display_ideas(ideas: List[dict]) -> None:
 
     st.session_state["selected_ideas"] = current_selected_ideas
 
+def build_app_for_idea(idea: dict):
+    """
+    Build a single app for a given idea.
+    Returns the slug of the built app or raises an exception on failure.
+    """
+    app_name = idea['title']
+    app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
+    apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
+    os.makedirs(apps_dir, exist_ok=True)
+    frontend_code, backend_code = build_app_code([idea], app_name_slug)
+    save_app_code(app_name_slug, frontend_code, backend_code)
+    return app_name_slug
 
 def build_selected_apps(selected_ideas: List[dict]) -> None:
     if not selected_ideas:
@@ -124,30 +131,24 @@ def build_selected_apps(selected_ideas: List[dict]) -> None:
         return
 
     st.info("Preparing to generate application code. Please wait...")
-    logger.info(f"Building app for ideas: {[idea['title'] for idea in selected_ideas]}")
+    logger.info(f"Building apps for selected ideas: {[idea['title'] for idea in selected_ideas]}")
 
+    # If multiple ideas are selected, build each one as a separate app in parallel
     try:
-        # Use the first idea's title for the app name
-        app_name = selected_ideas[0]['title'] if selected_ideas else "my_new_app"
-        app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
-        apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
-        os.makedirs(apps_dir, exist_ok=True)
-        st.info("Generating application code. Please wait...")
-        frontend_code, backend_code = build_app_code(selected_ideas, app_name_slug)
-        save_app_code(app_name_slug, frontend_code, backend_code)
-        st.success(f"App code generated and saved in `src/apps/{app_name_slug}/`!")
-        logger.debug("App code generation and saving completed successfully.")
-        st.session_state["app_built"] = True
-
-        # After building the app, reload the available apps
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(build_app_for_idea, idea) for idea in selected_ideas]
+            results = [f.result() for f in futures]
+        
+        # Store success message in session state
+        st.session_state["app_build_success_message"] = f"Apps generated for these ideas: {', '.join(results)}"
+        
+        # After building the apps, reload the available apps and then rerun
         load_available_apps()
-
-        st.success("You can now select and run the newly created app from the sidebar!")
+        st.rerun()
 
     except Exception as e:
-        logger.error(f"Error building the app: {e}")
-        st.error(f"An error occurred while building the app: {e}")
-
+        logger.error(f"Error building the app(s): {e}")
+        st.error(f"An error occurred while building the app(s): {e}")
 
 def run_app(app_path: str) -> None:
     spec = importlib.util.spec_from_file_location("generated_app", app_path)
@@ -159,7 +160,6 @@ def run_app(app_path: str) -> None:
     else:
         st.error("The selected app does not have a main() function to run.")
 
-
 def run():
     st.set_page_config(
         page_title="Agentic App Builder",
@@ -167,19 +167,6 @@ def run():
         page_icon="💡",
         initial_sidebar_state="expanded"
     )
-
-    # Custom CSS
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600&display=swap');
-    body {
-        font-family: 'Open Sans', sans-serif;
-    }
-    .stProgress > div > div > div > div {
-        background-color: #4285F4;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
     # Initialize session states if not present
     if "logs" not in st.session_state:
@@ -194,6 +181,8 @@ def run():
         st.session_state["app_built"] = False
     if "available_apps" not in st.session_state:
         st.session_state["available_apps"] = {}
+    if "sidebar_width" not in st.session_state:
+        st.session_state["sidebar_width"] = 300  # default width
 
     # Load available apps at startup
     load_available_apps()
@@ -203,6 +192,15 @@ def run():
         if os.path.exists(GOOGLE_ICON_PATH):
             st.image(GOOGLE_ICON_PATH, width=40)
         st.title("Agentic App Builder")
+
+        # Sidebar width slider
+        st.session_state["sidebar_width"] = st.slider(
+            "Adjust Sidebar Width",
+            min_value=200,
+            max_value=600,
+            value=st.session_state["sidebar_width"],
+            help="Use this slider to adjust the sidebar width"
+        )
 
         # Sidebar buttons
         ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.")
@@ -219,6 +217,16 @@ def run():
                 run_app(app_path)
         else:
             st.write("No generated apps available yet.")
+
+    # Apply custom CSS for sidebar width
+    st.markdown(f"""
+    <style>
+    [data-testid="stSidebar"] {{
+        min-width: {st.session_state["sidebar_width"]}px;
+        max-width: {st.session_state["sidebar_width"]}px;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
     st.header("Welcome to Agentic App Builder")
 
@@ -276,11 +284,17 @@ def run():
         if st.button("Build App"):
             build_selected_apps(st.session_state["selected_ideas"])
 
+    # Display the success message (if any) just before "Your App(s) are Ready!"
+    if "app_build_success_message" in st.session_state:
+        st.success(st.session_state["app_build_success_message"])
+        del st.session_state["app_build_success_message"]
+        st.session_state["app_built"] = True
+
     # If app is built, inform the user
     if st.session_state["app_built"]:
-        st.subheader("Your App is Ready!")
-        st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directory.")
-        st.markdown("You can now select it from the sidebar to run it inline.")
+        st.subheader("Your App(s) are Ready!")
+        st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directories.")
+        st.markdown("You can now select them from the sidebar to run them inline.")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ import os
 import re
 
 # Static variables
-MODEL_ID = "gemini-2.0-flash-exp"
+MODEL_ID = "gemini-1.5-pro"
 IDEATE_TEMPLATE_PATH = os.path.join(TEMPLATES_DIR, 'ideate.txt')
 BUILD_TEMPLATE_PATH = os.path.join(TEMPLATES_DIR, 'build.txt')
 FRONTEND_MARKERS = ("---BEGIN FRONTEND CODE---", "---END FRONTEND CODE---")

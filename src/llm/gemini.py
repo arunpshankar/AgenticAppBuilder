@@ -33,31 +33,6 @@ def generate_content(client: genai.Client, model_id: str, prompt: str) -> str:
         raise
 
 
-def count_tokens(client: genai.Client, model_id: str, prompt: str) -> int:
-    """
-    Counts the number of tokens in the input prompt using the GenAI client.
-
-    Args:
-        client (genai.Client): The GenAI client.
-        model_id (str): The model ID to use for token counting.
-        prompt (str): The input prompt for token counting.
-
-    Returns:
-        int: The number of tokens in the input prompt.
-
-    Raises:
-        Exception: If token counting fails.
-    """
-    try:
-        logger.info(f"Counting tokens for model: {model_id}")
-        response = client.models.count_tokens(model=model_id, contents=prompt)
-        logger.info(f"Token count: {response.total_tokens}")
-        return response.total_tokens
-    except Exception as e:
-        logger.error(f"Failed to count tokens: {e}")
-        raise
-
-
 if __name__ == "__main__":
     try:
         gemini_client: genai.Client = initialize_genai_client()
@@ -67,9 +42,5 @@ if __name__ == "__main__":
 
         # Generate content
         generate_content(gemini_client, MODEL_ID, prompt)
-
-        # Count tokens
-        count_tokens(gemini_client, MODEL_ID, "What's the highest mountain in Africa?")
-
     except Exception as e:
         logger.error(f"An error occurred in the main process: {e}")

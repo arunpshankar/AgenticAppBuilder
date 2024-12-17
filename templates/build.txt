@@ -5,6 +5,11 @@ You have some application ideas that involve interacting with external APIs. You
    - Uses **only Streamlit** for the frontend (no other UI frameworks).
    - Imports the backend module as `import src.apps.{app_name_slug}.backend`
    - Displays the results returned by the backend in a user-friendly format (e.g., JSON display).
+   - In `frontend.py`, define a function `main()` that:
+      - Sets up and runs the entire Streamlit user interface for the app.
+      - Calls the backend module to fetch data.
+      - Displays the returned data using Streamlit components.
+
 
 2. A **Python backend** (`backend.py`) that:
    - Contains functions and/or classes to fetch and process data from one or more APIs.
@@ -33,3 +38,26 @@ You have some application ideas that involve interacting with external APIs. You
   ```
 - Do not include JSON responses outside of code blocks.
 - No server code, just API calls and processing.
+
+
+IMPORTANT: Use Gemini wherever needed like this 
+
+from src.llm.gemini import generate_content 
+from src.config.client import initialize_genai_client
+
+gemini_client = initialize_genai_client()
+MODEL_ID = "gemini-1.5-pro"
+prompt = "<your prompt>"  # come up with a way to take the generated response and convert it into a markdown 
+
+# Generate content
+generate_content(gemini_client, MODEL_ID, prompt)
+
+use gemini especialy if the outputs need to be processed for better rendering pretty
+
+
+
+
+avoid using st.set_page_config
+
+
+
