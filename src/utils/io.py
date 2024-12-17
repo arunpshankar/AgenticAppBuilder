@@ -1,4 +1,5 @@
 from src.config.setup import PROJECT_ROOT
+from src.config.setup import CSV_PATH
 from src.config.logging import logger 
 from typing import Dict 
 from typing import Any 
@@ -67,4 +68,3 @@ def save_app_code(app_name_slug: str, frontend_code: str, backend_code: str) -> 
         logger.info("App code saved to: %s and %s", frontend_path, backend_path)
     except Exception as e:
         logger.error("Failed to save app code: %s", e)
-

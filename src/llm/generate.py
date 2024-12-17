@@ -108,13 +108,13 @@ def generate_ideas(num_ideas: int = 3) -> List[Dict]:
         }]
 
 
-def build_app_code(selected_ideas: List[Dict], app_slug: str) -> Tuple[str, str]:
+def build_app_code(selected_ideas: List[Dict], app_name_slug: str) -> Tuple[str, str]:
     """
     Generate frontend and backend code for an app based on selected ideas.
 
     Args:
         selected_ideas (List[Dict]): A list of selected ideas.
-        app_slug (str): The slugified name of the app.
+        app_name_slug (str): The slugified name of the app.
 
     Returns:
         Tuple[str, str]: Frontend and backend code as strings.
@@ -132,8 +132,7 @@ def build_app_code(selected_ideas: List[Dict], app_slug: str) -> Tuple[str, str]
     with open(BUILD_TEMPLATE_PATH, 'r', encoding='utf-8') as f:
         template = f.read()
 
-    prompt = template.format(ideas_summary=ideas_summary, apis_summary=apis_summary, app_slug=app_slug)
-
+    prompt = template.format(ideas_text=ideas_summary, entries_text=apis_summary, app_name_slug=app_name_slug)
     logger.info("Generating app code.")
     try:
         response = generate_content(client, MODEL_ID, prompt)

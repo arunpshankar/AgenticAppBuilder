@@ -1,40 +1,44 @@
-
-
 from src.config.setup import GOOGLE_ICON_PATH
 from src.llm.generate import generate_ideas
 from src.llm.generate import build_app_code
 from src.db.crud import purge_and_load_csv
 from src.config.setup import PROJECT_ROOT
-
 from src.utils.io import save_app_code
 from src.config.setup import CSV_PATH
 from src.config.logging import logger
 from src.db.crud import get_entries
-
 from typing import Generator
 from typing import Union
 from typing import Tuple 
 from typing import List 
 import streamlit as st
+import importlib.util
 import pandas as pd 
 import time
 import os
 
 
+def load_available_apps():
+    """
+    Scan the `src/apps/` directory for any subdirectories containing a `frontend.py`
+    file and update st.session_state["available_apps"].
+    """
+    apps_base_dir = os.path.join(PROJECT_ROOT, 'src', 'apps')
+    if "available_apps" not in st.session_state:
+        st.session_state["available_apps"] = {}
+
+    # Clear existing to avoid duplicates if running multiple times
+    st.session_state["available_apps"].clear()
+
+    if os.path.exists(apps_base_dir):
+        for entry in os.listdir(apps_base_dir):
+            d_path = os.path.join(apps_base_dir, entry)
+            if os.path.isdir(d_path):
+                frontend_path = os.path.join(d_path, "frontend.py")
+                if os.path.exists(frontend_path):
+                    st.session_state["available_apps"][entry] = os.path.relpath(frontend_path, start='.')
+
 def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dict]]], None, None]:
-    """
-    Run the ideation process with step-by-step logs and generate ideas using a Gemini LLM.
-
-    The function simulates a step-by-step ideation process and yields progress messages.
-    Finally, it yields a tuple ("IDEAS_RESULT", ideas) containing the generated ideas.
-
-    Args:
-        num_ideas (int): Number of ideas to generate from the LLM. Defaults to 3.
-
-    Yields:
-        str: A step in the ideation process.
-        tuple: ("IDEAS_RESULT", ideas) - the final result containing generated ideas.
-    """
     steps = [
         "Initiating ideation process...",
         "Analyzing available APIs from the database...",
@@ -43,7 +47,6 @@ def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dic
         "Finalizing ideas..."
     ]
 
-    # Simulate step-by-step process
     for step in steps:
         logger.debug(f"Ideation step: {step}")
         yield step
@@ -61,15 +64,6 @@ def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dic
 
 
 def handle_csv_upload(uploaded_file) -> None:
-    """
-    Handle the CSV file upload process.
-
-    Saves the uploaded CSV file to the configured CSV_PATH and attempts to load it into the database.
-    Displays success or error messages in the Streamlit UI.
-
-    Args:
-        uploaded_file: The uploaded file object from Streamlit file_uploader.
-    """
     if uploaded_file is not None:
         try:
             logger.debug("Uploading CSV file to disk.")
@@ -89,12 +83,6 @@ def handle_csv_upload(uploaded_file) -> None:
 
 
 def display_entries(entries_df: pd.DataFrame) -> None:
-    """
-    Display the entries from the database in a Streamlit dataframe.
-
-    Args:
-        entries_df (pd.DataFrame): The dataframe containing entries.
-    """
     st.subheader("Available Entries")
     if entries_df is not None and not entries_df.empty:
         st.dataframe(entries_df)
@@ -103,12 +91,6 @@ def display_entries(entries_df: pd.DataFrame) -> None:
 
 
 def display_ideas(ideas: List[dict]) -> None:
-    """
-    Display the generated ideas in a grid layout, with checkboxes to select them.
-
-    Args:
-        ideas (List[dict]): A list of ideas, each idea is a dict with keys like "title", "description", and "apis_used".
-    """
     st.subheader("Ideation Results")
     st.write("Select one or more ideas to build into an app:")
 
@@ -137,50 +119,48 @@ def display_ideas(ideas: List[dict]) -> None:
 
 
 def build_selected_apps(selected_ideas: List[dict]) -> None:
-    """
-    Generate and save the application code for the selected ideas.
-
-    Uses the LLM to generate frontend and backend code, then saves them locally.
-
-    Args:
-        selected_ideas (List[dict]): A list of selected ideas to build into the app.
-    """
     if not selected_ideas:
         st.warning("Please select at least one idea before building.")
         return
 
     st.info("Preparing to generate application code. Please wait...")
-    logger.debug(f"Building app for ideas: {[idea['title'] for idea in selected_ideas]}")
+    logger.info(f"Building app for ideas: {[idea['title'] for idea in selected_ideas]}")
 
     try:
         # Use the first idea's title for the app name
         app_name = selected_ideas[0]['title'] if selected_ideas else "my_new_app"
-        app_name_slug = app_name.lower().replace(" ", "_")
+        app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
         apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
         os.makedirs(apps_dir, exist_ok=True)
-
         st.info("Generating application code. Please wait...")
         frontend_code, backend_code = build_app_code(selected_ideas, app_name_slug)
         save_app_code(app_name_slug, frontend_code, backend_code)
         st.success(f"App code generated and saved in `src/apps/{app_name_slug}/`!")
         logger.debug("App code generation and saving completed successfully.")
         st.session_state["app_built"] = True
+
+        # After building the app, reload the available apps
+        load_available_apps()
+
+        st.success("You can now select and run the newly created app from the sidebar!")
+
     except Exception as e:
         logger.error(f"Error building the app: {e}")
         st.error(f"An error occurred while building the app: {e}")
 
 
+def run_app(app_path: str) -> None:
+    spec = importlib.util.spec_from_file_location("generated_app", app_path)
+    generated_app = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generated_app)
+
+    if hasattr(generated_app, 'main'):
+        generated_app.main()
+    else:
+        st.error("The selected app does not have a main() function to run.")
+
+
 def run():
-    """
-    Streamlit application entry point.
-    
-    - Sets up the page configuration.
-    - Handles CSV uploads.
-    - Triggers the ideation process.
-    - Displays available entries and ideas.
-    - Allows selecting ideas and building the app code.
-    """
-    # Page configuration
     st.set_page_config(
         page_title="Agentic App Builder",
         layout="wide",
@@ -201,27 +181,6 @@ def run():
     </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar
-    with st.sidebar:
-        if os.path.exists(GOOGLE_ICON_PATH):
-            st.image(GOOGLE_ICON_PATH, width=40)
-        st.title("Agentic App Builder")
-
-        # Sidebar buttons
-        ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.")
-        refresh_trigger = st.button("Refresh Entries", help="Refresh the entries table from the database.")
-
-    st.header("Welcome to Agentic App Builder")
-
-    # CSV Upload Section
-    st.subheader("Upload CSV")
-    uploaded_file = st.file_uploader("Select your CSV file", type=['csv'])
-    handle_csv_upload(uploaded_file)
-
-    # Logs Section
-    logs_expander = st.expander("Logs / Traces", expanded=False)
-    logs_container = logs_expander.empty()
-
     # Initialize session states if not present
     if "logs" not in st.session_state:
         st.session_state["logs"] = []
@@ -233,6 +192,44 @@ def run():
         st.session_state["selected_ideas"] = []
     if "app_built" not in st.session_state:
         st.session_state["app_built"] = False
+    if "available_apps" not in st.session_state:
+        st.session_state["available_apps"] = {}
+
+    # Load available apps at startup
+    load_available_apps()
+
+    # Sidebar
+    with st.sidebar:
+        if os.path.exists(GOOGLE_ICON_PATH):
+            st.image(GOOGLE_ICON_PATH, width=40)
+        st.title("Agentic App Builder")
+
+        # Sidebar buttons
+        ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.")
+        refresh_trigger = st.button("Refresh Entries", help="Refresh the entries table from the database.")
+
+        # Run Generated App
+        st.subheader("Run Generated App")
+        available_apps = st.session_state.get("available_apps", {})
+        if available_apps:
+            selected_app = st.selectbox("Select an app to run", ["None"] + list(available_apps.keys()))
+            if selected_app != "None":
+                app_path = available_apps[selected_app]
+                st.info(f"Running app: {selected_app}")
+                run_app(app_path)
+        else:
+            st.write("No generated apps available yet.")
+
+    st.header("Welcome to Agentic App Builder")
+
+    # CSV Upload Section
+    st.subheader("Upload CSV")
+    uploaded_file = st.file_uploader("Select your CSV file", type=['csv'])
+    handle_csv_upload(uploaded_file)
+
+    # Logs Section
+    logs_expander = st.expander("Logs / Traces", expanded=False)
+    logs_container = logs_expander.empty()
 
     # Refresh entries if triggered
     if refresh_trigger:
@@ -283,7 +280,7 @@ def run():
     if st.session_state["app_built"]:
         st.subheader("Your App is Ready!")
         st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directory.")
-        st.markdown("You can now integrate and run it locally, or further refine the code.")
+        st.markdown("You can now select it from the sidebar to run it inline.")
 
 
 if __name__ == "__main__":
