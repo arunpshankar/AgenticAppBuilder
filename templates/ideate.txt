@@ -16,3 +16,6 @@ Description: <Description here>
 APIs Used: <Comma-separated list of APIs here>
 
 Do not return JSON, just return the ideas as text.
+
+
+make sure when combining APIs it makes sense - do not combine APIs just for the sake of it - do not retrofit

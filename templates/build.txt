@@ -27,7 +27,6 @@ You have some application ideas that involve interacting with external APIs. You
 
 **Return Instructions:**
 - Return your code in plain text with the following markers:
-  ```
   ---BEGIN FRONTEND CODE---
   # frontend code here
   ---END FRONTEND CODE---
@@ -35,7 +34,7 @@ You have some application ideas that involve interacting with external APIs. You
   ---BEGIN BACKEND CODE---
   # backend code here
   ---END BACKEND CODE---
-  ```
+  
 - Do not include JSON responses outside of code blocks.
 - No server code, just API calls and processing.
 
@@ -46,11 +45,12 @@ from src.llm.gemini import generate_content
 from src.config.client import initialize_genai_client
 
 gemini_client = initialize_genai_client()
-MODEL_ID = "gemini-1.5-pro"
+MODEL_ID = "gemini-2.0-flash-exp"
 prompt = "<your prompt>"  # come up with a way to take the generated response and convert it into a markdown 
 
 # Generate content
-generate_content(gemini_client, MODEL_ID, prompt)
+response = generate_content(gemini_client, MODEL_ID, prompt)
+text_response = response.text
 
 use gemini especialy if the outputs need to be processed for better rendering pretty
 
@@ -60,4 +60,14 @@ use gemini especialy if the outputs need to be processed for better rendering pr
 avoid using st.set_page_config
 
 
+avoid this error at all cost - "The selected app does not have a main() function to run." when i run frontend 
 
+
+try avoiding Error decoding color palette JSON: Expecting value: line 1 column 1 (char 0)
+handle json with care 
+
+
+The use_column_width parameter has been deprecated and will be removed in a future release. Please utilize the use_container_width parameter instead.
+
+
+IMPORTANT: AVOID generating ``` 
