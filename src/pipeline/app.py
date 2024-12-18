@@ -247,18 +247,6 @@ def run():
     color: transparent; /* Keep this as well */
     }
 
-    /* Pastel-colored buttons */
-    .stButton>button {
-        background: linear-gradient(to right, #F8BBD0, #C5CAE9) !important;
-        color: #fff !important;
-        border: none !important;
-        border-radius: 4px !important;
-        font-weight: 600 !important;
-    }
-    .stButton>button:hover {
-        background: linear-gradient(to right, #F48FB1, #9FA8DA) !important;
-    }
-
     </style>
     """, unsafe_allow_html=True)
 
@@ -287,8 +275,8 @@ def run():
         # Change the title for the side panel
         st.markdown("<h2 style='font-family: Inter, sans-serif; color:#ea4335;'>Test Panel</h2>", unsafe_allow_html=True)
 
-        ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.")
-        refresh_trigger = st.button("Refresh Entries", help="Refresh the entries table from the database.")
+        ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.", type="primary")
+        refresh_trigger = st.button("Refresh Entries", help="Refresh the entries table from the database.", type="secondary")
 
         st.subheader("Run Generated App")
         available_apps = st.session_state.get("available_apps", {})
@@ -354,7 +342,7 @@ def run():
         display_ideas(st.session_state["ideas"])
 
         # Build the selected app(s)
-        if st.button("Build App"):
+        if st.button("Build App", type="primary"):
             build_selected_apps(st.session_state["selected_ideas"])
 
     # Display success message if apps built
