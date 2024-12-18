@@ -107,6 +107,7 @@ def build_app_code(selected_ideas: List[Dict], app_name_slug: str, entries: pd.D
         template = f.read()
 
     prompt = template.format(ideas_text=ideas_summary, entries_text=apis_summary, app_name_slug=app_name_slug)
+    print('>>>>>>\n', prompt, '<<<<<<')
     
     logger.info("Generating app code.")
     try:
@@ -123,8 +124,29 @@ def build_app_code(selected_ideas: List[Dict], app_name_slug: str, entries: pd.D
 def extract_code_block(response: str, markers: Tuple[str, str]) -> str:
     start_marker, end_marker = markers
     try:
+        # Extract section between markers
         code_section = response.split(start_marker, 1)[1].split(end_marker, 1)[0]
+        
+        # First try to find code block with backticks
         code_block = re.search(r"```(.*?)```", code_section, re.DOTALL)
-        return code_block.group(1).strip() if code_block else code_section.strip()
+        
+        if code_block:
+            # Extract content from triple backticks
+            code = code_block.group(1).strip()
+        else:
+            # Use the whole section if no backticks found
+            code = code_section.strip()
+        
+        # Clean any stray backticks at start or end
+        # Handle single and double backticks that might be left
+        code = re.sub(r'^`{1,2}', '', code)  # Remove 1-2 backticks at start
+        code = re.sub(r'`{1,2}$', '', code)  # Remove 1-2 backticks at end
+        
+        # Handle case where there might be a language identifier
+        if code.split('\n', 1)[0].strip().lower() in ['python', 'javascript', 'java', 'cpp', 'typescript']:
+            code = code.split('\n', 1)[1] if '\n' in code else code
+            
+        return code.strip()
+        
     except (IndexError, AttributeError):
         return f"# No code block found for section: {start_marker}"
