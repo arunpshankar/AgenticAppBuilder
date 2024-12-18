@@ -35,7 +35,7 @@ def main():
 ```
 
 #### Design Guidelines
-* Implement responsive layouts using `use_container_width=True`
+* DO NOT use `use_column_width` for responsive layouts instead ALWAYS use `use_container_width`
 * Avoid `st.set_page_config` usage
 * Handle JSON data safely with proper error handling
 * Structure the UI for optimal user experience
@@ -178,3 +178,15 @@ if __name__ == "__main__":
     main()
 ---END FRONTEND CODE---
 ```
+
+❌ INCORRECT imports (external dependency dotenv in imports):
+import requests
+from typing import Dict, Optional
+from dotenv import load_dotenv  
+
+
+❌ INCORRECT imports (external dependency geopy in imports):
+import requests
+from typing import Dict, Optional
+from geopy.geocoders import Nominatim
+
