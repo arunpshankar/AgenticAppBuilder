@@ -222,13 +222,13 @@ def run():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
     body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Nunito Sans', 'Helvetica', sans-serif;
         font-size: 14px;
         color: #333;
         background-color: #f8f8f8;
     }
     h1, h2, h3, h4 {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Cascadia Code', 'Monaco', monospace;
         color: #222;
     }
     /* Make checked checkboxes green in data_editor */
@@ -236,6 +236,29 @@ def run():
         background-color: #4CAF50 !important;
         border-color: #4CAF50 !important;
     }
+
+    .rainbow-title {
+    font-size: 2.5em;
+    font-weight: 800;
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* This is key */
+    color: transparent; /* Keep this as well */
+    }
+
+    /* Pastel-colored buttons */
+    .stButton>button {
+        background: linear-gradient(to right, #F8BBD0, #C5CAE9) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 4px !important;
+        font-weight: 600 !important;
+    }
+    .stButton>button:hover {
+        background: linear-gradient(to right, #F48FB1, #9FA8DA) !important;
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -257,17 +280,12 @@ def run():
 
     # Sidebar
     with st.sidebar:
+        # Render Google icon in the side panel
         if os.path.exists(GOOGLE_ICON_PATH):
             st.image(GOOGLE_ICON_PATH, width=40)
-        st.title("Agentic App Builder")
-
-        sidebar_width = st.slider(
-            "Adjust Sidebar Width",
-            min_value=200,
-            max_value=600,
-            value=300,
-            help="Use this slider to adjust the sidebar width"
-        )
+        
+        # Change the title for the side panel
+        st.markdown("<h2 style='font-family: Inter, sans-serif; color:#ea4335;'>Test Panel</h2>", unsafe_allow_html=True)
 
         ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.")
         refresh_trigger = st.button("Refresh Entries", help="Refresh the entries table from the database.")
@@ -283,16 +301,7 @@ def run():
         else:
             st.write("No generated apps available yet.")
 
-    st.markdown(f"""
-    <style>
-    [data-testid="stSidebar"] {{
-        min-width: {sidebar_width}px;
-        max-width: {sidebar_width}px;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.header("Welcome to Agentic App Builder")
+    st.markdown("<h1 class='rainbow-title'>Agentic App Builder</h1>", unsafe_allow_html=True)
 
     # CSV Upload Section
     st.subheader("Upload CSV")

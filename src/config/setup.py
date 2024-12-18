@@ -11,7 +11,7 @@ DATA_DIR: str = os.path.join(PROJECT_ROOT, 'data')
 DB_DIR: str = os.path.join(PROJECT_ROOT, 'db')
 DB_PATH: str = os.path.join(DB_DIR, 'apis.db')
 CSV_PATH: str = os.path.join(DATA_DIR, 'apis.csv')
-IMAGES_DIR: str = os.path.join(os.path.dirname(BASE_DIR), 'images')
+IMAGES_DIR: str = os.path.join(PROJECT_ROOT, 'img')
 GOOGLE_ICON_PATH: str = os.path.join(IMAGES_DIR, 'google_icon.png')
 TEMPLATES_DIR: str = os.path.join(PROJECT_ROOT, 'templates')
 
