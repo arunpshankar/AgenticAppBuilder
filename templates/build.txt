@@ -1,73 +1,180 @@
-You have some application ideas that involve interacting with external APIs. Your goal is to create two Python modules inside `src/apps/{app_name_slug}/`:
+# Application Generation Guidelines
 
-1. A **Streamlit frontend** (`frontend.py`) that:
-   - Provides a user interface for entering queries or parameters and initiating API calls.
-   - Uses **only Streamlit** for the frontend (no other UI frameworks).
-   - Imports the backend module as `import src.apps.{app_name_slug}.backend`
-   - Displays the results returned by the backend in a user-friendly format (e.g., JSON display).
-   - In `frontend.py`, define a function `main()` that:
-      - Sets up and runs the entire Streamlit user interface for the app.
-      - Calls the backend module to fetch data.
-      - Displays the returned data using Streamlit components.
+## Overview
+You will create a modular Python application that interacts with external APIs. The application will be structured in two core modules under `src/apps/{app_name_slug}/`.
 
+## Code Generation Rules
+### Critical Formatting Requirements
+* Do not include any floating or standalone text (e.g., "python", "```", "`") at the start or end of files
+* Begin code directly with proper Python imports - no header text
+* Ensure no stray backticks or markdown artifacts appear in the generated code
+* Maintain clean file transitions between frontend and backend code blocks
+* Include docstrings and comments within the code, not as external text
 
-2. A **Python backend** (`backend.py`) that:
-   - Contains functions and/or classes to fetch and process data from one or more APIs.
-   - Uses only Python standard library modules for making API calls.
-   - Includes well-documented code explaining how the API calls are constructed and processed.
-   - Returns structured Python data to be displayed by the frontend, without running a server.
-   - avoid using  urllib instead use requests 
-   - avoid creating servers like using flask, fastapi, socketserver etc
+## Module Requirements
 
-**Given Ideas:**
-{ideas_text}
+### 1. Streamlit Frontend (`frontend.py`)
+#### Core Requirements
+* Create an intuitive user interface for API interactions
+* Utilize Streamlit exclusively (no alternative frameworks)
+* Import backend via `from src.apps.{app_name_slug} import backend`
+* Present API results in human-friendly formats
+* Use Gemini for formatting complex JSON responses
 
-**Database of Available APIs:**
-{entries_text}
+#### Main Function Structure
+```python
+def main():
+    """
+    Primary entry point for the Streamlit application.
+    Responsibilities:
+    - Configure and render the user interface
+    - Handle user inputs and interactions
+    - Process and display data from backend
+    - Format JSON responses using Gemini
+    """
+```
 
-**Return Instructions:**
-- Return your code in plain text with the following markers:
-  ---BEGIN FRONTEND CODE---
-  # frontend code here
-  ---END FRONTEND CODE---
+#### Design Guidelines
+* Implement responsive layouts using `use_container_width=True`
+* Avoid `st.set_page_config` usage
+* Handle JSON data safely with proper error handling
+* Structure the UI for optimal user experience
+* Use Gemini to prettify API responses before display
 
-  ---BEGIN BACKEND CODE---
-  # backend code here
-  ---END BACKEND CODE---
-  
-- Do not include JSON responses outside of code blocks.
-- No server code, just API calls and processing.
+### 2. Backend Module (`backend.py`)
+#### Core Requirements
+* Implement API interaction logic
+* Use Python standard library + requests library
+* Include comprehensive documentation
+* Return structured data objects
+* No server implementations (Flask/FastAPI prohibited)
 
+#### API Integration Guidelines
+* Prefer `requests` over `urllib`
+* Implement proper error handling
+* Cache responses when appropriate
+* Validate API responses
+* Return clean Python dictionaries for frontend processing
 
-IMPORTANT: Use Gemini wherever needed like this 
-
-from src.llm.gemini import generate_content 
+## Gemini Integration
+### Required Imports
+```python
+from src.llm.gemini import generate_content
 from src.config.client import initialize_genai_client
+```
 
+### Usage Template
+```python
 gemini_client = initialize_genai_client()
 MODEL_ID = "gemini-2.0-flash-exp"
-prompt = "<your prompt>"  # come up with a way to take the generated response and convert it into a markdown 
 
-# Generate content
-response = generate_content(gemini_client, MODEL_ID, prompt)
-text_response = response.text
+def process_with_gemini(prompt: str) -> str:
+    """
+    Process content through Gemini and format as markdown.
+    
+    Args:
+        prompt (str): Input prompt for Gemini
+        
+    Returns:
+        str: Formatted markdown response
+    """
+    response = generate_content(gemini_client, MODEL_ID, prompt)
+    return response.text
+```
 
-use gemini especialy if the outputs need to be processed for better rendering pretty
+## Input Parameters
+* `{ideas_text}`: Application concepts to implement
+* `{entries_text}`: Available API specifications
+
+## Response Format
+Your response must follow this exact structure with no additional text:
+
+```
+---BEGIN FRONTEND CODE---
+[Complete frontend implementation starting with imports]
+---END FRONTEND CODE---
+
+---BEGIN BACKEND CODE---
+[Complete backend implementation starting with imports]
+---END BACKEND CODE---
+```
+
+## Important Considerations
+1. Focus on maintainable, well-documented code
+2. Implement comprehensive error handling
+3. Optimize for performance and user experience
+4. Follow Python best practices and PEP 8
+5. Ensure secure API handling practices
+6. Provide clear code documentation
+7. Include type hints where beneficial
+8. Use Gemini for formatting complex data structures
+9. Start files directly with imports - no headers or floating text
+
+## Restrictions
+* No server-side implementations
+* No external UI frameworks
+* No raw JSON responses outside code blocks
+* No deprecated Streamlit parameters 
+* Avoid using unexpected keyword args like 
+* Replace `use_container_width` with  `use_container_width`
+* No floating text or backticks
+* No markdown artifacts in generated code
 
 
+### Example: Correct vs Incorrect Code Generation
 
+❌ INCORRECT (with floating text and backticks):
+```
+python
+```python
+import streamlit as st
+```
 
-avoid using st.set_page_config
+def main():
+    st.title("My App")
+```
 
+✅ CORRECT:
+```
+---BEGIN FRONTEND CODE---
+import streamlit as st
+from typing import Dict, List
+from src.apps.weather_app import backend
 
-avoid this error at all cost - "The selected app does not have a main() function to run." when i run frontend 
+def main():
+    st.title("My App")
+    
+if __name__ == "__main__":
+    main()
+---END FRONTEND CODE---
+```
 
+❌ INCORRECT (with stray backticks and comments outside code):
+```
+This is a weather app
+`
+import streamlit as st
+# This is the main function
+`
+def main():
+    st.title("Weather App")
+```
 
-try avoiding Error decoding color palette JSON: Expecting value: line 1 column 1 (char 0)
-handle json with care 
+✅ CORRECT:
+```
+---BEGIN FRONTEND CODE---
+import streamlit as st
+from typing import Dict, List
+from src.apps.weather_app import backend
 
-
-The use_column_width parameter has been deprecated and will be removed in a future release. Please utilize the use_container_width parameter instead.
-
-
-IMPORTANT: AVOID generating ``` 
+def main():
+    """
+    Main function for the Weather App interface.
+    Handles user input and displays weather data.
+    """
+    st.title("Weather App")
+    
+if __name__ == "__main__":
+    main()
+---END FRONTEND CODE---
+```

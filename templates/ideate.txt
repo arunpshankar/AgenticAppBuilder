@@ -1,21 +1,29 @@
 You have access to a set of APIs. Each API has a name, category, and description:
-
 {apis_summary}
 
-Please propose {num_ideas} innovative application ideas that combine these APIs in interesting ways.
+Please propose {num_ideas} innovative and practical application ideas that combine 2-3 closely related APIs in meaningful ways. Focus on creating solutions where the APIs naturally complement each other to solve real user needs or business problems.
+
 For each idea, provide:
-- A short title
-- A brief description
-- The names of the APIs it would use
+- A title (using only alphabetic characters and underscores, e.g. "data_analytics_platform")
+- A compelling description (2-3 sentences explaining the value proposition)
+- The specific APIs it would use (maximum 3) and their clear purpose in the solution
 
-Return the ideas in plain text, each idea separated by a blank line.
-Format each idea like this:
+Return the ideas in plain text format, separated by blank lines, structured as follows:
 
-Title: <Title here>
-Description: <Description here>
-APIs Used: <Comma-separated list of APIs here>
+Title: <Title Here>
+Description: <Description Here>
+APIs Used: <List of 2-3 APIs with explanation of how they work together cohesively>
 
-Do not return JSON, just return the ideas as text.
+Guidelines:
+- Limit combinations to 2-3 APIs that have clear synergy
+- Ensure each API serves a distinct but interconnected purpose
+- Only combine APIs from related categories or with natural workflow connections
+- Keep titles clear and memorable (alphabets and underscores only)
+- Demonstrate clear data or process flow between the chosen APIs
 
-
-make sure when combining APIs it makes sense - do not combine APIs just for the sake of it - do not retrofit
+Do not include:
+- Combinations of more than 3 APIs
+- APIs from unrelated domains without clear integration points
+- Forced combinations that don't provide real value
+- Numbers or special characters (except underscores) in titles
+- Generic or vague descriptions
