@@ -107,6 +107,7 @@ def build_app_code(selected_ideas: List[Dict], app_name_slug: str, entries: pd.D
         template = f.read()
 
     prompt = template.format(ideas_text=ideas_summary, entries_text=apis_summary, app_name_slug=app_name_slug)
+    
     logger.info("Generating app code.")
     try:
         response = generate_content(client, MODEL_ID, prompt)

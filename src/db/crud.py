@@ -97,7 +97,7 @@ def fetch_db_entries() -> List[Dict]:
         with engine.connect() as conn:
             logger.debug("Fetching specific columns from 'apientry' table.")
             result = conn.execute(text(
-                "SELECT name, category, base_url, endpoint, description FROM apientry"
+                "SELECT name, category, base_url, endpoint, description, query_parameters, example_request, example_response FROM apientry"
             ))
             entries = [
                 {
@@ -105,7 +105,10 @@ def fetch_db_entries() -> List[Dict]:
                     "category": row["category"],
                     "base_url": row["base_url"],
                     "endpoint": row["endpoint"],
-                    "description": row["description"]
+                    "description": row["description"],
+                    "query_parameters": row["query_parameters"],
+                    "example_request": row["example_request"],
+                    "example_response": row["example_response"]
                 }
                 for row in result.mappings()
             ]
@@ -129,7 +132,7 @@ def fetch_db_entries_by_names(names: List[str]) -> List[Dict]:
         placeholders = ", ".join([f":name{i}" for i in range(len(names))])
         params = {f"name{i}": name for i, name in enumerate(names)}
         with engine.connect() as conn:
-            query = text(f"SELECT name, category, base_url, endpoint, description FROM apientry WHERE name IN ({placeholders})")
+            query = text(f"SELECT name, category, base_url, endpoint, description, query_parameters, example_request, example_response FROM apientry WHERE name IN ({placeholders})")
             result = conn.execute(query, params)
             entries = [
                 {
@@ -137,7 +140,10 @@ def fetch_db_entries_by_names(names: List[str]) -> List[Dict]:
                     "category": row["category"],
                     "base_url": row["base_url"],
                     "endpoint": row["endpoint"],
-                    "description": row["description"]
+                    "description": row["description"],
+                    "query_parameters": row["query_parameters"],
+                    "example_request": row["example_request"],
+                    "example_response": row["example_response"]
                 }
                 for row in result.mappings()
             ]

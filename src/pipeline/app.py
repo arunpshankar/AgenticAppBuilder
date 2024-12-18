@@ -90,27 +90,54 @@ def handle_csv_upload(uploaded_file) -> None:
 def display_entries(entries_df: pd.DataFrame) -> None:
     st.subheader("Available Entries")
 
-    if entries_df is not None and not entries_df.empty:
-        st.markdown("<p style='color:gray;font-size:13px;'>If you do not select any rows, random APIs will be chosen for you. Selected rows will be used for ideation and code generation.</p>", unsafe_allow_html=True)
-        
-        # Reinitialize display_df if needed
-        if "display_df" not in st.session_state or len(st.session_state["display_df"]) != len(entries_df):
-            display_df = entries_df.copy().reset_index(drop=True)
-
-            # Ensure 'name' column exists
-            if 'name' not in display_df.columns:
-                st.warning("No 'name' column found in entries. Please ensure CSV has a 'name' column.")
-                return
-            
-            display_df.insert(0, 'Select', [False] * len(display_df))
-            st.session_state["display_df"] = display_df
-        else:
-            display_df = st.session_state["display_df"]
-
-        edited_df = st.data_editor(display_df, num_rows="dynamic", use_container_width=True)
-        st.session_state["display_df"] = edited_df
-    else:
+    if entries_df is None or entries_df.empty:
         st.write("No entries available. Please upload a CSV.")
+        return
+
+    st.markdown(
+        "<p style='color:gray;font-size:13px;'>If you do not select any rows, random APIs will be chosen for you. "
+        "Selected rows will be used for ideation and code generation. To avoid scrolling resets, select multiple rows first and then click 'Submit Selections'.</p>",
+        unsafe_allow_html=True
+    )
+
+    # Initialize display_df in session state if needed
+    if "display_df" not in st.session_state or \
+       st.session_state["display_df"].shape[0] != entries_df.shape[0]:
+        display_df = entries_df.copy().reset_index(drop=True)
+        if 'name' not in display_df.columns:
+            st.warning("No 'name' column found in entries. Please ensure CSV has a 'name' column.")
+            return
+        # Add a "Select" column with boolean checkboxes
+        display_df.insert(0, 'Select', False)
+        st.session_state["display_df"] = display_df
+
+    with st.form("selection_form"):
+        edited_df = st.data_editor(
+            st.session_state["display_df"],
+            num_rows="dynamic",
+            use_container_width=True,
+            key="entries_editor"
+        )
+        submit = st.form_submit_button("Submit Selections")
+
+    # Update session_state after the user submits the form
+    if submit:
+        st.session_state["display_df"] = edited_df
+
+    # Highlight selected rows below the editor
+    selected_rows = st.session_state["display_df"][st.session_state["display_df"]["Select"]]
+    if not selected_rows.empty:
+        st.write("**Selected Entries:**")
+        # Apply a background color to highlight selected rows
+        styled_selected = selected_rows.style.apply(
+            lambda row: ['background-color: #D9F2E6' for _ in row],
+            axis=1
+        )
+        st.dataframe(styled_selected, use_container_width=True)
+    else:
+        st.write("No entries selected.")
+
+
 
 def display_ideas(ideas: List[dict]) -> None:
     st.subheader("Ideation Results")

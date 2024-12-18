@@ -83,8 +83,11 @@ def process_with_gemini(prompt: str) -> str:
 ```
 
 ## Input Parameters
-* `{ideas_text}`: Application concepts to implement
-* `{entries_text}`: Available API specifications
+* Application ideas to implement:
+`{ideas_text}`
+
+* Available API specifications:
+`{entries_text}`
 
 ## Response Format
 Your response must follow this exact structure with no additional text:
