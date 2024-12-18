@@ -4,9 +4,7 @@ from src.config.logging import logger
 from src.config.setup import DB_PATH
 from src.config.setup import engine
 from sqlalchemy import text
-from typing import Tuple
-from typing import Dict 
-from typing import List
+from typing import Tuple, List, Dict
 import pandas as pd
 import os
 
@@ -14,13 +12,6 @@ import os
 def validate_csv(df: pd.DataFrame) -> Tuple[bool, str]:
     """
     Validate that the given DataFrame contains all required columns.
-
-    Args:
-        df (pd.DataFrame): The DataFrame loaded from CSV.
-
-    Returns:
-        Tuple[bool, str]: A tuple where the first element is a boolean indicating
-                          if the CSV is valid, and the second is a message.
     """
     required_columns = [
         "name", "category", "base_url", "endpoint",
@@ -36,13 +27,6 @@ def validate_csv(df: pd.DataFrame) -> Tuple[bool, str]:
 def purge_and_load_csv(csv_path: str) -> Tuple[bool, str]:
     """
     Drop the existing 'apientry' table (if it exists) and load the CSV file data into it.
-
-    Args:
-        csv_path (str): Path to the CSV file to load.
-
-    Returns:
-        Tuple[bool, str]: A tuple where the first element is a boolean indicating success,
-                          and the second is a message.
     """
     logger.debug("Attempting to load CSV from path: %s", csv_path)
 
@@ -86,9 +70,6 @@ def purge_and_load_csv(csv_path: str) -> Tuple[bool, str]:
 def get_entries() -> pd.DataFrame:
     """
     Retrieve all entries from the 'apientry' table and return them as a DataFrame.
-
-    Returns:
-        pd.DataFrame: A DataFrame of all entries from the database.
     """
     if not os.path.exists(DB_PATH):
         logger.warning("Database file not found at path: %s", DB_PATH)
@@ -110,10 +91,7 @@ def get_entries() -> pd.DataFrame:
 def fetch_db_entries() -> List[Dict]:
     """
     Retrieve API entries from the 'apientry' table in the database.
-
-    Returns:
-        List[Dict]: A list of dictionaries, where each dict represents an API entry
-                    with keys: name, category, base_url, endpoint, description.
+    Returns a list of dicts with keys: name, category, base_url, endpoint, description.
     """
     try:
         with engine.connect() as conn:
@@ -137,4 +115,33 @@ def fetch_db_entries() -> List[Dict]:
 
     except Exception as e:
         logger.error("Error while fetching API entries: %s", e)
+        return []
+
+
+def fetch_db_entries_by_names(names: List[str]) -> List[Dict]:
+    """
+    Retrieve API entries from 'apientry' table for the given list of names.
+    """
+    if not names:
+        return []
+
+    try:
+        placeholders = ", ".join([f":name{i}" for i in range(len(names))])
+        params = {f"name{i}": name for i, name in enumerate(names)}
+        with engine.connect() as conn:
+            query = text(f"SELECT name, category, base_url, endpoint, description FROM apientry WHERE name IN ({placeholders})")
+            result = conn.execute(query, params)
+            entries = [
+                {
+                    "name": row["name"],
+                    "category": row["category"],
+                    "base_url": row["base_url"],
+                    "endpoint": row["endpoint"],
+                    "description": row["description"]
+                }
+                for row in result.mappings()
+            ]
+        return entries
+    except Exception as e:
+        logger.error("Error while fetching entries by names: %s", e)
         return []
