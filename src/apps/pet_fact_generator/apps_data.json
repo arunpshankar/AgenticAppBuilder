@@ -1,0 +1,48 @@
+{
+  "ideas": [
+    {
+      "title": "pet_fact_generator",
+      "description": "This tool provides an engaging experience for animal lovers by offering a mix of random cat and dog facts, creating a dynamic and varied informational feed. Users can get different facts about cats or dogs, providing a quick way to learn interesting insights about these popular animals.",
+      "apis_used": [
+        "cat facts (Retrieve a random cat fact)",
+        "dog facts (Retrieve a random dog image) - The application alternates between showing a random cat fact or a random dog image",
+        "presenting a variety of pet-related content to the user."
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "Select": true,
+      "name": "cat facts",
+      "category": "animal",
+      "base_url": "https://catfact.ninja",
+      "endpoint": "/facts",
+      "description": "Retrieve multiple cat facts.",
+      "query_parameters": "limit (integer)",
+      "example_request": "GET https://catfact.ninja/facts?limit=3",
+      "example_response": "{\"data\": [{\"fact\": \"Cats have five toes on their front paws, but only four on the back ones.\", \"length\": 74}, {\"fact\": \"A group of cats is called a clowder.\", \"length\": 34}, {\"fact\": \"Cats can rotate their ears 180 degrees.\", \"length\": 42}], \"current_page\": 1, \"last_page\": 1, \"per_page\": 3, \"total\": 3}"
+    },
+    {
+      "Select": true,
+      "name": "cat facts",
+      "category": "animal",
+      "base_url": "https://catfact.ninja",
+      "endpoint": "/breeds",
+      "description": "Retrieve a list of cat breeds.",
+      "query_parameters": "limit (integer)",
+      "example_request": "GET https://catfact.ninja/breeds?limit=2",
+      "example_response": "{\"data\": [{\"breed\": \"Abyssinian\", \"country\": \"Ethiopia\", \"origin\": \"Natural/Standard\", \"coat\": \"Short\", \"pattern\": \"Ticked\"}, {\"breed\": \"Aegean\", \"country\": \"Greece\", \"origin\": \"Natural\", \"coat\": \"Semi-long\", \"pattern\": \"Bi- or tri-colored\"}], \"current_page\": 1, \"last_page\": 1, \"per_page\": 2, \"total\": 2}"
+    },
+    {
+      "Select": true,
+      "name": "dog facts",
+      "category": "animal",
+      "base_url": "https://dog.ceo/api",
+      "endpoint": "/breeds/image/random",
+      "description": "Retrieve a random dog image.",
+      "query_parameters": null,
+      "example_request": "GET https://dog.ceo/api/breeds/image/random",
+      "example_response": "{\"message\": \"https://images.dog.ceo/breeds/hound-afghan/n02088094_1003.jpg\", \"status\": \"success\"}"
+    }
+  ]
+}

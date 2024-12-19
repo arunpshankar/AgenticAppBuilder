@@ -1,6 +1,5 @@
 from src.config.setup import GOOGLE_ICON_PATH
-from src.llm.generate import generate_ideas
-from src.llm.generate import build_app_code
+from src.llm.generate import generate_ideas, build_app_code
 from src.db.crud import purge_and_load_csv
 from src.config.setup import PROJECT_ROOT
 from src.utils.io import save_app_code
@@ -12,19 +11,14 @@ import streamlit as st
 import pandas as pd
 import time
 import os
+import json
 import importlib.util
 from concurrent.futures import ThreadPoolExecutor
 
 def load_available_apps():
-    """
-    Scan the `src/apps/` directory for any subdirectories containing a `frontend.py`
-    file and update st.session_state["available_apps"].
-    """
     apps_base_dir = os.path.join(PROJECT_ROOT, 'src', 'apps')
     if "available_apps" not in st.session_state:
         st.session_state["available_apps"] = {}
-
-    # Clear existing to avoid duplicates if running multiple times
     st.session_state["available_apps"].clear()
 
     if os.path.exists(apps_base_dir):
@@ -49,7 +43,6 @@ def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dic
         yield step
         time.sleep(1)
 
-    # Determine selected names
     if "display_df" in st.session_state and "entries_df" in st.session_state:
         selected_df = st.session_state["display_df"]
         if "Select" in selected_df and selected_df["Select"].any():
@@ -59,7 +52,6 @@ def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dic
     else:
         selected_names = []
 
-    # Generate ideas using the LLM based on selected_names
     try:
         ideas = generate_ideas(num_ideas=num_ideas, selected_names=selected_names)
         logger.debug(f"{len(ideas)} ideas generated successfully.")
@@ -100,14 +92,12 @@ def display_entries(entries_df: pd.DataFrame) -> None:
         unsafe_allow_html=True
     )
 
-    # Initialize display_df in session state if needed
     if "display_df" not in st.session_state or \
        st.session_state["display_df"].shape[0] != entries_df.shape[0]:
         display_df = entries_df.copy().reset_index(drop=True)
         if 'name' not in display_df.columns:
             st.warning("No 'name' column found in entries. Please ensure CSV has a 'name' column.")
             return
-        # Add a "Select" column with boolean checkboxes
         display_df.insert(0, 'Select', False)
         st.session_state["display_df"] = display_df
 
@@ -120,15 +110,12 @@ def display_entries(entries_df: pd.DataFrame) -> None:
         )
         submit = st.form_submit_button("Submit Selections")
 
-    # Update session_state after the user submits the form
     if submit:
         st.session_state["display_df"] = edited_df
 
-    # Highlight selected rows below the editor
     selected_rows = st.session_state["display_df"][st.session_state["display_df"]["Select"]]
     if not selected_rows.empty:
         st.write("**Selected Entries:**")
-        # Apply a background color to highlight selected rows
         styled_selected = selected_rows.style.apply(
             lambda row: ['background-color: #D9F2E6' for _ in row],
             axis=1
@@ -136,8 +123,6 @@ def display_entries(entries_df: pd.DataFrame) -> None:
         st.dataframe(styled_selected, use_container_width=True)
     else:
         st.write("No entries selected.")
-
-
 
 def display_ideas(ideas: List[dict]) -> None:
     st.subheader("Ideation Results")
@@ -166,17 +151,16 @@ def display_ideas(ideas: List[dict]) -> None:
 
     st.session_state["selected_ideas"] = current_selected_ideas
 
-def build_app_for_idea(idea: dict):
+def build_app_for_idea(idea: dict, selected_entries: pd.DataFrame):
     app_name = idea['title']
     app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
     apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
     os.makedirs(apps_dir, exist_ok=True)
 
-    # Use only the selected entries
-    selected_entries = st.session_state.get("selected_entries_df", pd.DataFrame())
-
+    # Build code for this idea
     frontend_code, backend_code = build_app_code([idea], app_name_slug, entries=selected_entries)
     save_app_code(app_name_slug, frontend_code, backend_code)
+
     return app_name_slug
 
 def build_selected_apps(selected_ideas: List[dict]) -> None:
@@ -187,11 +171,14 @@ def build_selected_apps(selected_ideas: List[dict]) -> None:
     st.info("Preparing to generate application code. Please wait...")
     logger.info(f"Building apps for selected ideas: {[idea['title'] for idea in selected_ideas]}")
 
+    selected_entries = st.session_state.get("display_df", pd.DataFrame())
+    selected_entries_df = selected_entries[selected_entries["Select"]] if "Select" in selected_entries.columns else pd.DataFrame()
+
     try:
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(build_app_for_idea, idea) for idea in selected_ideas]
+            futures = [executor.submit(build_app_for_idea, idea, selected_entries_df) for idea in selected_ideas]
             results = [f.result() for f in futures]
-        
+
         st.session_state["app_build_success_message"] = f"Apps generated for these ideas: {', '.join(results)}"
         load_available_apps()
         st.rerun()
@@ -200,14 +187,22 @@ def build_selected_apps(selected_ideas: List[dict]) -> None:
         st.error(f"An error occurred while building the app(s): {e}")
 
 def run_app(app_path: str) -> None:
-    spec = importlib.util.spec_from_file_location("generated_app", app_path)
-    generated_app = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(generated_app)
+    try:
+        spec = importlib.util.spec_from_file_location("generated_app", app_path)
+        generated_app = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generated_app)
 
-    if hasattr(generated_app, 'main'):
-        generated_app.main()
-    else:
-        st.error("The selected app does not have a main() function to run.")
+        if hasattr(generated_app, 'main'):
+            generated_app.main()
+        else:
+            raise AttributeError("The selected app does not have a main() function to run.")
+    except Exception as e:
+        app_name_slug = os.path.basename(os.path.dirname(app_path))
+        st.session_state["run_error"] = {
+            "app_name_slug": app_name_slug,
+            "error_message": str(e)
+        }
+        return
 
 def run():
     st.set_page_config(
@@ -217,7 +212,6 @@ def run():
         initial_sidebar_state="expanded"
     )
 
-    # Modern, unique, pretty, and polished font and styling + green checkboxes
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
@@ -231,7 +225,6 @@ def run():
         font-family: 'Cascadia Code', 'Monaco', monospace;
         color: #222;
     }
-    /* Make checked checkboxes green in data_editor */
     [data-testid="stDataFrameContainer"] div[data-baseweb="checkbox"] input:checked ~ div {
         background-color: #4CAF50 !important;
         border-color: #4CAF50 !important;
@@ -243,8 +236,8 @@ def run():
     background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
     background-clip: text;
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent; /* This is key */
-    color: transparent; /* Keep this as well */
+    -webkit-text-fill-color: transparent;
+    color: transparent;
     }
 
     </style>
@@ -262,17 +255,13 @@ def run():
         st.session_state["app_built"] = False
     if "available_apps" not in st.session_state:
         st.session_state["available_apps"] = {}
-    # display_df initialized in display_entries if needed
 
     load_available_apps()
 
-    # Sidebar
     with st.sidebar:
-        # Render Google icon in the side panel
         if os.path.exists(GOOGLE_ICON_PATH):
             st.image(GOOGLE_ICON_PATH, width=40)
         
-        # Change the title for the side panel
         st.markdown("<h2 style='font-family: Inter, sans-serif; color:#ea4335;'>Test Panel</h2>", unsafe_allow_html=True)
 
         ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.", type="primary")
@@ -284,23 +273,24 @@ def run():
             selected_app = st.selectbox("Select an app to run", ["None"] + list(available_apps.keys()))
             if selected_app != "None":
                 app_path = available_apps[selected_app]
-                st.info(f"Running app: {selected_app}")
                 run_app(app_path)
         else:
             st.write("No generated apps available yet.")
 
+        if "run_error" in st.session_state:
+            app_name_slug = st.session_state["run_error"]["app_name_slug"]
+            error_message = st.session_state["run_error"]["error_message"]
+            st.error(f"Error running the app: {error_message}")
+
     st.markdown("<h1 class='rainbow-title'>Agentic App Builder</h1>", unsafe_allow_html=True)
 
-    # CSV Upload Section
     st.subheader("Upload CSV")
     uploaded_file = st.file_uploader("Select your CSV file", type=['csv'])
     handle_csv_upload(uploaded_file)
 
-    # Logs Section
     logs_expander = st.expander("Logs / Traces", expanded=False)
     logs_container = logs_expander.empty()
 
-    # Refresh entries if triggered
     if refresh_trigger:
         try:
             st.session_state["entries_df"] = get_entries()
@@ -311,10 +301,8 @@ def run():
             logger.error(f"Failed to refresh entries: {e}")
             st.error(f"Failed to refresh entries: {e}")
 
-    # Display entries and selection
     display_entries(st.session_state["entries_df"])
 
-    # Handle Ideation process
     if ideate_trigger:
         st.session_state["ideas"] = []
         st.session_state["logs"] = []
@@ -337,15 +325,12 @@ def run():
         else:
             st.warning("No ideas generated.")
 
-    # Display and select ideas
     if st.session_state["ideas"]:
         display_ideas(st.session_state["ideas"])
 
-        # Build the selected app(s)
         if st.button("Build App", type="primary"):
             build_selected_apps(st.session_state["selected_ideas"])
 
-    # Display success message if apps built
     if "app_build_success_message" in st.session_state:
         st.success(st.session_state["app_build_success_message"])
         del st.session_state["app_build_success_message"]
@@ -355,7 +340,6 @@ def run():
         st.subheader("Your App(s) are Ready!")
         st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directories.")
         st.markdown("You can now select them from the sidebar to run them inline.")
-
 
 if __name__ == "__main__":
     try:

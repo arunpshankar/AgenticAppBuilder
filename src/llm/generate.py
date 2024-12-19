@@ -150,3 +150,4 @@ def extract_code_block(response: str, markers: Tuple[str, str]) -> str:
         
     except (IndexError, AttributeError):
         return f"# No code block found for section: {start_marker}"
+    
