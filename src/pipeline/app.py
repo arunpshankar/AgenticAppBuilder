@@ -117,7 +117,7 @@ def display_entries(entries_df: pd.DataFrame) -> None:
     if not selected_rows.empty:
         st.write("**Selected Entries:**")
         styled_selected = selected_rows.style.apply(
-            lambda row: ['background-color: #D9F2E6' for _ in row],
+            lambda row: ['background-color: #A5D6A7' for _ in row],
             axis=1
         )
         st.dataframe(styled_selected, use_container_width=True)
