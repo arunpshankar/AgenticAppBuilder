@@ -1,7 +1,8 @@
 You have access to a set of APIs. Each API has a name, category, and description:
 {apis_summary}
 
-Please propose {num_ideas} innovative and practical application ideas that combine 2-3 closely related APIs in meaningful ways. Focus on creating solutions where the APIs naturally complement each other to solve real user needs or business problems.
+Please propose {num_ideas} innovative and practical application ideas that combine 2-3 closely related APIs in meaningful ways. 
+Focus on creating solutions where the APIs naturally complement each other to solve real user needs or business problems.
 
 For each idea, provide:
 - A title (using only alphabetic characters and underscores, e.g. "data_analytics_platform")
