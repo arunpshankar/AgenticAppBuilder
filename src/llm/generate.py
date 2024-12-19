@@ -1,5 +1,5 @@
 from src.config.client import initialize_genai_client
-from src.llm.gemini import generate_content
+from llm.gemini_text import generate_content
 from src.config.setup import TEMPLATES_DIR
 from src.db.crud import fetch_db_entries, fetch_db_entries_by_names, get_entries
 from src.config.logging import logger

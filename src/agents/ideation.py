@@ -1,5 +1,5 @@
 from src.config.client import initialize_genai_client
-from src.llm.gemini import generate_content
+from llm.gemini_text import generate_content
 from sqlalchemy.engine.base import Engine
 from src.config.logging import logger
 from sqlalchemy import create_engine, text

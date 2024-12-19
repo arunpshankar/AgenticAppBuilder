@@ -1,7 +1,7 @@
 import streamlit as st
 from typing import List, Dict
 from src.apps.cat_breed_explorer import backend
-from src.llm.gemini import generate_content
+from llm.gemini_text import generate_content
 from src.config.client import initialize_genai_client
 
 gemini_client = initialize_genai_client()

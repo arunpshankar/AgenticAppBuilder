@@ -1,6 +1,6 @@
 import requests
 from typing import Dict, List, Optional
-from src.llm.gemini import generate_content
+from llm.gemini_text import generate_content
 from src.config.client import initialize_genai_client
 import json
 
