@@ -143,3 +143,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 For queries or collaborations, please contact [Your Name](mailto:arunpshankar@google.com).
+
+
+
+
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONPATH=$PYTHONPATH:.

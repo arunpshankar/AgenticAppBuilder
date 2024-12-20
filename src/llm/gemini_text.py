@@ -29,8 +29,14 @@ def generate_content(client: genai.Client, model_id: str, prompt: str) -> str:
         logger.info(f"Response: {response.text.strip()}")
         return response
     except Exception as e:
-        logger.error(f"Failed to generate content: {e}")
+        logger.error("Failed to generate content.")
+        try:
+            logger.error(f"Partial response (if any): {response.text.strip()}")
+        except NameError:
+            logger.error("No response available due to an exception.")
+        logger.error(f"Exception details: {e}")
         raise
+
 
 
 if __name__ == "__main__":

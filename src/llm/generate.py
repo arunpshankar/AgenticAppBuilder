@@ -1,7 +1,7 @@
 from src.config.client import initialize_genai_client
-from llm.gemini_text import generate_content
+from src.llm.gemini_text import generate_content
 from src.config.setup import TEMPLATES_DIR
-from src.db.crud import fetch_db_entries, fetch_db_entries_by_names, get_entries
+from src.db.crud import fetch_db_entries, fetch_db_entries_by_names
 from src.config.logging import logger
 from typing import Tuple, Dict, List
 import os
@@ -29,28 +29,48 @@ def build_prompt(entries: List[Dict], num_ideas: int) -> str:
 
 
 def extract_ideas_from_response(response: str) -> List[Dict]:
+    # Regex pattern that:
+    # 1. Matches Title line: "Title: <some_title>"
+    #    - <some_title> must be alphabetic/underscore only, per instructions
+    # 2. Matches Description line: "Description: <some_description>"
+    # 3. Matches APIs Used line: "APIs Used: <API_1, API_2, ...>"
+    # This pattern assumes each idea block is separated by a blank line.
+    pattern = re.compile(
+        r"^Title:\s*([A-Za-z_]+)\r?\n"      # Title line with allowed chars
+        r"Description:\s*(.+?)\r?\n"         # Description line (non-greedy)
+        r"APIs Used:\s*(.+)$",               # APIs Used line
+        re.IGNORECASE | re.MULTILINE
+    )
+
     ideas = []
-    raw_ideas = [idea.strip() for idea in response.split("\n\n") if idea.strip()]
+    # Split the entire response by double newlines to handle each idea block
+    raw_ideas = [block.strip() for block in response.strip().split("\n\n") if block.strip()]
 
     for idea_text in raw_ideas:
-        fields = {
-            "title": re.search(r"^Title:\s*(.+)", idea_text, re.IGNORECASE | re.MULTILINE),
-            "description": re.search(r"^Description:\s*(.+)", idea_text, re.IGNORECASE | re.MULTILINE),
-            "apis_used": re.search(r"^APIs Used:\s*(.+)", idea_text, re.IGNORECASE | re.MULTILINE)
-        }
+        match = pattern.search(idea_text)
+        if match:
+            title = match.group(1).strip()
+            description = match.group(2).strip()
+            apis_used_line = match.group(3).strip()
+            # Split the APIs by comma and strip whitespace from each API name
+            apis_used = [api.strip() for api in apis_used_line.split(",") if api.strip()]
 
-        if fields["title"] and fields["description"]:
-            ideas.append({
-                "title": fields["title"].group(1).strip(),
-                "description": fields["description"].group(1).strip(),
-                "apis_used": [api.strip() for api in fields["apis_used"].group(1).split(",")] if fields["apis_used"] else []
-            })
+            # Only add this idea if all fields are present and valid
+            # (If needed, add any additional validation checks here)
+            if title and description and apis_used:
+                ideas.append({
+                    "title": title,
+                    "description": description,
+                    "apis_used": apis_used
+                })
 
+    # Return extracted ideas or a fallback if none found
     return ideas if ideas else [{
         "title": "LLM Error",
         "description": "No valid ideas could be extracted.",
         "apis_used": []
     }]
+
 
 
 def generate_ideas(num_ideas: int = 3, selected_names: List[str] = None) -> List[Dict]:
@@ -107,7 +127,6 @@ def build_app_code(selected_ideas: List[Dict], app_name_slug: str, entries: pd.D
         template = f.read()
 
     prompt = template.format(ideas_text=ideas_summary, entries_text=apis_summary, app_name_slug=app_name_slug)
-    print('>>>>>>\n', prompt, '<<<<<<')
     
     logger.info("Generating app code.")
     try:

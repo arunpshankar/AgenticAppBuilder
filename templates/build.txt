@@ -1,27 +1,59 @@
 # Application Generation Guidelines
 
-## Overview
-You will create a modular Python application that interacts with external APIs. The application will be structured in two core modules under `src/apps/{app_name_slug}/`.
+**Objective:**  
+Build a modular Python application with a Streamlit frontend and a backend that integrates with an external API using the provided SERP API key. The application should format complex JSON responses using Gemini.
+
+## Directory Structure
+Your code will produce two Python modules under `src/apps/{app_name_slug}/`:
+1. `frontend.py`
+2. `backend.py`
+
+No additional files or extraneous text should be included.
 
 ## Code Generation Rules
-### Critical Formatting Requirements
-* Do not include any floating or standalone text (e.g., "python", "```", "`") at the start or end of files
-* Begin code directly with proper Python imports - no header text
-* Ensure no stray backticks or markdown artifacts appear in the generated code
-* Maintain clean file transitions between frontend and backend code blocks
-* Include docstrings and comments within the code, not as external text
 
-## Module Requirements
+**Formatting:**
+- Start each file with direct Python imports (no extra text, backticks, or Markdown artifacts).
+- No `st.set_page_config` usage.
+- No floating text outside code blocks.
+- Ensure code sections follow the response format exactly.
 
-### 1. Streamlit Frontend (`frontend.py`)
-#### Core Requirements
-* Create an intuitive user interface for API interactions
-* Utilize Streamlit exclusively (no alternative frameworks)
-* Import backend via `from src.apps.{app_name_slug} import backend`
-* Present API results in human-friendly formats
-* Use Gemini for formatting complex JSON responses
+**Dependencies:**
+- Allowed: Standard library, `requests`, `streamlit`.
+- Forbidden: Flask, FastAPI, additional UI frameworks, or other external libraries not mentioned.
+  
+**Documentation:**
+- Include docstrings and comments **inside** the code only.
+- Follow PEP 8 style guidelines.
+- Implement robust error handling and logging.
+- Use `from src.config.logging import logger` for logging.
 
-#### Main Function Structure
+## Frontend (`frontend.py`)
+
+**Requirements:**
+- Use Streamlit exclusively.
+- Import backend via `from src.apps.{app_name_slug} import backend`.
+- Build an intuitive user interface for interacting with the API.
+- Display results in a user-friendly format.
+- Use Gemini to prettify and format JSON responses.  
+  - Gemini integration: 
+    ```python
+    from src.llm.gemini_text import generate_content
+    from src.config.client import initialize_genai_client
+
+    gemini_client = initialize_genai_client()
+    MODEL_ID = "gemini-2.0-flash-exp"
+
+    def process_with_gemini(prompt: str) -> str:
+        response = generate_content(gemini_client, MODEL_ID, prompt)
+        return response.text
+    ```
+
+**UI Guidelines:**
+- No `use_column_width`; use `use_container_width` for layout elements.
+- Handle JSON data with appropriate error handling.
+- Provide a top-level `main()` function that configures the UI and handles user interactions.
+
 ```python
 def main():
     """
@@ -34,71 +66,41 @@ def main():
     """
 ```
 
-#### Design Guidelines
-* DO NOT use `use_column_width` for responsive layouts instead ALWAYS use `use_container_width`
-* Avoid `st.set_page_config` usage
-* Handle JSON data safely with proper error handling
-* Structure the UI for optimal user experience
-* Use Gemini to prettify API responses before display
+## Backend (`backend.py`)
 
-### 2. Backend Module (`backend.py`)
-#### Core Requirements
-* Implement API interaction logic
-* Use Python standard library + requests library
-* Include comprehensive documentation
-* Return structured data objects
-* No server implementations (Flask/FastAPI prohibited)
+**Requirements:**
+- Use `requests` for external API calls.
+- Import `get_api_key` from `src.config.serp` to retrieve the SERP API key.
+- Implement API logic with proper error handling.
+- Return structured Python dictionaries suitable for frontend consumption.
+- No server implementations (like Flask or FastAPI).
+- Include comprehensive docstrings and comments.
+- Cache responses if appropriate, and validate data thoroughly.
 
-#### API Integration Guidelines
-* Prefer `requests` over `urllib`
-* Implement proper error handling
-* Cache responses when appropriate
-* Validate API responses
-* Return clean Python dictionaries for frontend processing
-
-## Gemini Integration
-### Required Imports
 ```python
-from src.llm.gemini import generate_content
-from src.config.client import initialize_genai_client
+from src.config.serp import get_api_key
+# Use get_api_key() to fetch the SERP API key
 ```
 
-### Usage Template
-```python
-gemini_client = initialize_genai_client()
-MODEL_ID = "gemini-2.0-flash-exp"
-
-def process_with_gemini(prompt: str) -> str:
-    """
-    Process content through Gemini and format as markdown.
-    
-    Args:
-        prompt (str): Input prompt for Gemini
-        
-    Returns:
-        str: Formatted markdown response
-    """
-    response = generate_content(gemini_client, MODEL_ID, prompt)
-    return response.text
-```
+**API Interaction Guidelines:**
+- Validate responses from the external API.
+- Handle network and data errors gracefully.
+- Return clean, user-friendly data structures.
 
 ## Input Parameters
-* Application ideas to implement:
-`{ideas_text}`
-
-* Available API specifications:
-`{entries_text}`
+- `{ideas_text}`: Application ideas to implement.
+- `{entries_text}`: Available API specifications.
 
 ## Response Format
-Your response must follow this exact structure with no additional text:
+Your response must follow this structure exactly:
 
 ```
 ---BEGIN FRONTEND CODE---
-[Complete frontend implementation starting with imports]
+[Complete frontend.py code here, starting with imports, no extra text]
 ---END FRONTEND CODE---
 
 ---BEGIN BACKEND CODE---
-[Complete backend implementation starting with imports]
+[Complete backend.py code here, starting with imports, no extra text]
 ---END BACKEND CODE---
 ```
 
@@ -117,12 +119,10 @@ Your response must follow this exact structure with no additional text:
 * No server-side implementations
 * No external UI frameworks
 * No raw JSON responses outside code blocks
-* No deprecated Streamlit parameters 
-* Avoid using unexpected keyword args like 
-* Replace `use_container_width` with  `use_container_width`
+* No deprecated Streamlit parameters
+* Avoid using unexpected keyword arguments
 * No floating text or backticks
 * No markdown artifacts in generated code
-
 
 ### Example: Correct vs Incorrect Code Generation
 
@@ -132,7 +132,6 @@ python
 ```python
 import streamlit as st
 ```
-
 def main():
     st.title("My App")
 ```
@@ -187,8 +186,70 @@ import requests
 from typing import Dict, Optional
 from dotenv import load_dotenv  
 
-
 ❌ INCORRECT imports (external dependency geopy in imports):
 import requests
 from typing import Dict, Optional
 from geopy.geocoders import Nominatim
+
+❌ INCORRECT
+```
+---BEGIN FRONTEND CODE---
+import streamlit as st
+from typing import Dict, List
+from src.apps.weather_app import backend
+
+def main():
+    """
+    Main function for the Weather App interface.
+    Handles user input and displays weather data.
+    """
+    st.title("Weather App")
+    
+if __name__ == "__main__":
+    main()
+---END FRONTEND CODE---
+`
+```
+
+❌ INCORRECT
+```
+`
+---BEGIN FRONTEND CODE---
+import streamlit as st
+from typing import Dict, List
+from src.apps.weather_app import backend
+
+def main():
+    """
+    Main function for the Weather App interface.
+    Handles user input and displays weather data.
+    """
+    st.title("Weather App")
+    
+if __name__ == "__main__":
+    main()
+---END FRONTEND CODE---
+`
+```
+
+
+
+❌ INCORRECT
+```
+`
+---BEGIN FRONTEND CODE---
+import streamlit as st
+from typing import Dict, List
+from src.apps.weather_app import backend
+
+def main():
+    """
+    Main function for the Weather App interface.
+    Handles user input and displays weather data.
+    """
+    st.title("Weather App")
+    
+if __name__ == "__main__":
+    main()
+---END FRONTEND CODE---
+```
