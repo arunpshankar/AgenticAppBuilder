@@ -716,6 +716,831 @@ def get_google_shopping_search(q: str, location: Optional[str] = None, google_do
         raise
 
 
+def get_walmart_basic_search(query: str, page: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Walmart search results using a query from SerpApi.
+
+    :param query: Search query (required).
+    :param page: Page number for results (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing Walmart search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "walmart", "query": query, "api_key": api_key}
+    if page:
+        params["page"] = page
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        search_results = response.json()
+        logger.info(f"Retrieved Walmart search results for query '{query}': {search_results}")
+        return search_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Walmart search results for query '{query}': {e}")
+        raise
+
+def get_walmart_category_search(cat_id: str, page: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Walmart search results by category ID from SerpApi.
+
+    :param cat_id: Category ID (required).
+    :param page: Page number for results (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing category search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "walmart", "cat_id": cat_id, "api_key": api_key}
+    if page:
+        params["page"] = page
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        category_results = response.json()
+        logger.info(f"Retrieved Walmart category search results for category ID '{cat_id}': {category_results}")
+        return category_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Walmart category search results for category ID '{cat_id}': {e}")
+        raise
+
+def get_google_trends_interest_over_time(q: str, date: Optional[str] = None, hl: Optional[str] = None, geo: Optional[str] = None, tz: Optional[int] = None, gprop: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve 'Interest over time' data for a given query using SerpApi's Google Trends API.
+
+    :param q: Search query (required).
+    :param date: Date range for the trends (optional).
+    :param hl: Language for the search (optional).
+    :param geo: Geographic region (optional).
+    :param tz: Timezone offset (optional).
+    :param gprop: Google property (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing interest over time data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_trends", "q": q, "api_key": api_key}
+    if date:
+        params["date"] = date
+    if hl:
+        params["hl"] = hl
+    if geo:
+        params["geo"] = geo
+    if tz:
+        params["tz"] = tz
+    if gprop:
+        params["gprop"] = gprop
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        trends_data = response.json()
+        logger.info(f"Retrieved Google Trends 'Interest over time' data for query '{q}': {trends_data}")
+        return trends_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Trends 'Interest over time' data for query '{q}': {e}")
+        raise
+
+def get_google_trends_compared_breakdown(q: str, data_type: str = "GEO_MAP", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve 'Compared breakdown by region' data for multiple queries using SerpApi's Google Trends API.
+
+    :param q: Comma-separated queries (required).
+    :param data_type: Data type (e.g., 'GEO_MAP', required).
+    :param geo: Geographic region (optional).
+    :param region: Specific region (optional).
+    :param date: Date range for the trends (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing compared breakdown data by region.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_trends", "q": q, "data_type": data_type, "api_key": api_key}
+    if geo:
+        params["geo"] = geo
+    if region:
+        params["region"] = region
+    if date:
+        params["date"] = date
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        breakdown_data = response.json()
+        logger.info(f"Retrieved Google Trends 'Compared breakdown by region' data for queries '{q}': {breakdown_data}")
+        return breakdown_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Trends 'Compared breakdown by region' data for queries '{q}': {e}")
+        raise
+
+
+def get_google_trends_interest_by_region(q: str, data_type: str = "GEO_MAP_0", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve 'Interest by region' data for a single query using SerpApi's Google Trends API.
+
+    :param q: Search query (required).
+    :param data_type: Data type (required, default is 'GEO_MAP_0').
+    :param geo: Geographic region (optional).
+    :param region: Specific region (optional).
+    :param date: Date range for the trends (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing interest by region data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_trends", "q": q, "data_type": data_type, "api_key": api_key}
+    if geo:
+        params["geo"] = geo
+    if region:
+        params["region"] = region
+    if date:
+        params["date"] = date
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        region_data = response.json()
+        logger.info(f"Retrieved Google Trends 'Interest by region' data for query '{q}': {region_data}")
+        return region_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Trends 'Interest by region' data for query '{q}': {e}")
+        raise
+
+def get_google_hotels_basic_search(q: str, check_in_date: str, check_out_date: str, hl: Optional[str] = None, gl: Optional[str] = None, currency: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve hotel listings by location and date range from SerpApi's Google Hotels API.
+
+    :param q: Search query (required).
+    :param check_in_date: Check-in date (required).
+    :param check_out_date: Check-out date (required).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param currency: Currency for prices (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing hotel listings.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_hotels", "q": q, "check_in_date": check_in_date, "check_out_date": check_out_date, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if currency:
+        params["currency"] = currency
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        hotel_data = response.json()
+        logger.info(f"Retrieved Google Hotels listings for query '{q}': {hotel_data}")
+        return hotel_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Hotels listings for query '{q}': {e}")
+        raise
+
+def get_google_vacation_rentals(q: str, check_in_date: str, check_out_date: str, vacation_rentals: Optional[bool] = None, bedrooms: Optional[int] = None, bathrooms: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve vacation rental listings instead of hotels by using SerpApi's Google Hotels API.
+
+    :param q: Search query (required).
+    :param check_in_date: Check-in date (required).
+    :param check_out_date: Check-out date (required).
+    :param vacation_rentals: Whether to retrieve vacation rentals (optional).
+    :param bedrooms: Number of bedrooms (optional).
+    :param bathrooms: Number of bathrooms (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing vacation rental listings.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_hotels", "q": q, "check_in_date": check_in_date, "check_out_date": check_out_date, "api_key": api_key}
+    if vacation_rentals:
+        params["vacation_rentals"] = vacation_rentals
+    if bedrooms:
+        params["bedrooms"] = bedrooms
+    if bathrooms:
+        params["bathrooms"] = bathrooms
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        rental_data = response.json()
+        logger.info(f"Retrieved Google Vacation Rentals listings for query '{q}': {rental_data}")
+        return rental_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Vacation Rentals listings for query '{q}': {e}")
+        raise
+
+def get_google_hotels_property_details(property_token: str, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve detailed information about a specific property by using property_token.
+
+    :param property_token: Property token (required).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing property details.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_hotels", "property_token": property_token, "api_key": api_key}
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        property_details = response.json()
+        logger.info(f"Retrieved property details for token '{property_token}': {property_details}")
+        return property_details
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve property details for token '{property_token}': {e}")
+        raise
+
+def get_google_local_basic_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve local business results by query using SerpApi's Google Local API.
+
+    :param q: Search query (required).
+    :param location: Location for the search (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing local business results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_local", "q": q, "api_key": api_key}
+    if location:
+        params["location"] = location
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        local_results = response.json()
+        logger.info(f"Retrieved Google Local search results for query '{q}': {local_results}")
+        return local_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Local search results for query '{q}': {e}")
+        raise
+
+
+
+def get_google_finance_basic_search(q: str, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google Finance data for a given ticker or search query from SerpApi.
+
+    :param q: Search query or ticker (required).
+    :param hl: Language for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing Google Finance data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_finance", "q": q, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        finance_data = response.json()
+        logger.info(f"Retrieved Google Finance data for query '{q}': {finance_data}")
+        return finance_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Finance data for query '{q}': {e}")
+        raise
+
+def get_google_finance_currency_exchange(q: str, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve exchange rate data for a currency pair using SerpApi.
+
+    :param q: Currency pair (e.g., 'USD/EUR') (required).
+    :param hl: Language for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing currency exchange rate data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_finance", "q": q, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        exchange_data = response.json()
+        logger.info(f"Retrieved currency exchange data for query '{q}': {exchange_data}")
+        return exchange_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve currency exchange data for query '{q}': {e}")
+        raise
+
+def get_google_product_offers(product_id: str, offers: int = 1, start: Optional[int] = None, filter: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve online sellers (offers) for a given product_id using SerpApi.
+
+    :param product_id: Product ID (required).
+    :param offers: Indicates offers are to be retrieved (default: 1).
+    :param start: Starting page or index for results (optional).
+    :param filter: Additional filters for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing product offers data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_product", "product_id": product_id, "offers": offers, "api_key": api_key}
+    if start:
+        params["start"] = start
+    if filter:
+        params["filter"] = filter
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        offers_data = response.json()
+        logger.info(f"Retrieved product offers for product ID '{product_id}': {offers_data}")
+        return offers_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve product offers for product ID '{product_id}': {e}")
+        raise
+
+def get_google_product_specs(product_id: str, specs: int = 1, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve detailed specifications for a given product_id using SerpApi.
+
+    :param product_id: Product ID (required).
+    :param specs: Indicates specifications are to be retrieved (default: 1).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing product specifications data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_product", "product_id": product_id, "specs": specs, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        specs_data = response.json()
+        logger.info(f"Retrieved product specifications for product ID '{product_id}': {specs_data}")
+        return specs_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve product specifications for product ID '{product_id}': {e}")
+        raise
+
+def get_google_product_reviews(product_id: str, reviews: int = 1, filter: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve reviews for a given product_id using SerpApi.
+
+    :param product_id: Product ID (required).
+    :param reviews: Indicates reviews are to be retrieved (default: 1).
+    :param filter: Additional filters for the reviews (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing product reviews data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_product", "product_id": product_id, "reviews": reviews, "api_key": api_key}
+    if filter:
+        params["filter"] = filter
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        reviews_data = response.json()
+        logger.info(f"Retrieved product reviews for product ID '{product_id}': {reviews_data}")
+        return reviews_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve product reviews for product ID '{product_id}': {e}")
+        raise
+
+def get_google_events_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None, location: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve events based on a query using SerpApi's Google Events API.
+
+    :param q: Search query (e.g., 'Events in Austin, TX') (required).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param location: Location for the events (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing events data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_events", "q": q, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if location:
+        params["location"] = location
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        events_data = response.json()
+        logger.info(f"Retrieved events for query '{q}': {events_data}")
+        return events_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve events for query '{q}': {e}")
+        raise
+
+def get_google_flights_round_trip(departure_id: Optional[str] = None, arrival_id: Optional[str] = None, outbound_date: Optional[str] = None, return_date: str = "", hl: Optional[str] = None, gl: Optional[str] = None, currency: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve round-trip flight results using SerpApi's Google Flights API.
+
+    :param departure_id: Departure location (optional).
+    :param arrival_id: Arrival location (optional).
+    :param outbound_date: Outbound flight date (optional).
+    :param return_date: Return flight date (required for round trip).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param currency: Currency for prices (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing round-trip flight data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_flights", "type": 1, "return_date": return_date, "api_key": api_key}
+    if departure_id:
+        params["departure_id"] = departure_id
+    if arrival_id:
+        params["arrival_id"] = arrival_id
+    if outbound_date:
+        params["outbound_date"] = outbound_date
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if currency:
+        params["currency"] = currency
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        flights_data = response.json()
+        logger.info(f"Retrieved round-trip flight results: {flights_data}")
+        return flights_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve round-trip flight results: {e}")
+        raise
+
+def get_google_flights_one_way(departure_id: Optional[str] = None, arrival_id: Optional[str] = None, outbound_date: Optional[str] = None, stops: int = 1, max_price: Optional[int] = None, hl: Optional[str] = None, gl: Optional[str] = None, currency: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve one-way flight results with filters using SerpApi's Google Flights API.
+
+    :param departure_id: Departure location (optional).
+    :param arrival_id: Arrival location (optional).
+    :param outbound_date: Outbound flight date (optional).
+    :param stops: Number of stops (default is 1 for nonstop).
+    :param max_price: Maximum price for flights (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param currency: Currency for prices (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing one-way flight data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_flights", "type": 2, "stops": stops, "api_key": api_key}
+    if departure_id:
+        params["departure_id"] = departure_id
+    if arrival_id:
+        params["arrival_id"] = arrival_id
+    if outbound_date:
+        params["outbound_date"] = outbound_date
+    if max_price:
+        params["max_price"] = max_price
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if currency:
+        params["currency"] = currency
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        flights_data = response.json()
+        logger.info(f"Retrieved one-way flight results: {flights_data}")
+        return flights_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve one-way flight results: {e}")
+        raise
+
+def get_google_flights_multi_city(multi_city_json: List[Dict[str, str]], hl: Optional[str] = None, gl: Optional[str] = None, currency: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve multi-city flight results using SerpApi's Google Flights API.
+
+    :param multi_city_json: JSON list of segments specifying departure, arrival, and date (required).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param currency: Currency for prices (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing multi-city flight data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_flights", "type": 3, "multi_city_json": multi_city_json, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if currency:
+        params["currency"] = currency
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        flights_data = response.json()
+        logger.info(f"Retrieved multi-city flight results: {flights_data}")
+        return flights_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve multi-city flight results: {e}")
+        raise
+
+def get_google_flights_with_airline_filters(departure_id: Optional[str] = None, arrival_id: Optional[str] = None, outbound_date: Optional[str] = None, return_date: Optional[str] = None, include_airlines: Optional[str] = None, exclude_airlines: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, currency: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve flight results including or excluding specific airlines or alliances using SerpApi's Google Flights API.
+
+    :param departure_id: Departure location (optional).
+    :param arrival_id: Arrival location (optional).
+    :param outbound_date: Outbound flight date (optional).
+    :param return_date: Return flight date (optional).
+    :param include_airlines: Airlines to include in the search (optional).
+    :param exclude_airlines: Airlines to exclude from the search (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param currency: Currency for prices (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing filtered flight data.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_flights", "type": 1, "api_key": api_key}
+    if departure_id:
+        params["departure_id"] = departure_id
+    if arrival_id:
+        params["arrival_id"] = arrival_id
+    if outbound_date:
+        params["outbound_date"] = outbound_date
+    if return_date:
+        params["return_date"] = return_date
+    if include_airlines:
+        params["include_airlines"] = include_airlines
+    if exclude_airlines:
+        params["exclude_airlines"] = exclude_airlines
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if currency:
+        params["currency"] = currency
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        flights_data = response.json()
+        logger.info(f"Retrieved filtered flight results: {flights_data}")
+        return flights_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve filtered flight results: {e}")
+        raise
+
+
+def get_google_flights_booking_options(booking_token: str, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve booking options for a selected flight itinerary using SerpApi's Google Flights API.
+
+    :param booking_token: Booking token for the selected flight itinerary (required).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing booking options.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_flights", "booking_token": booking_token, "api_key": api_key}
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        booking_data = response.json()
+        logger.info(f"Retrieved booking options for booking token '{booking_token}': {booking_data}")
+        return booking_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve booking options for booking token '{booking_token}': {e}")
+        raise
+
+def get_google_lens_basic_search(url: str, hl: Optional[str] = None, country: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google Lens results by providing an image URL using SerpApi.
+
+    :param url: URL of the image (required).
+    :param hl: Language for the search (optional).
+    :param country: Country for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing Google Lens results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_lens", "url": url, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if country:
+        params["country"] = country
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        lens_data = response.json()
+        logger.info(f"Retrieved Google Lens results for image URL '{url}': {lens_data}")
+        return lens_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Lens results for image URL '{url}': {e}")
+        raise
+
+def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve app listings from the Google Play Store by search query using SerpApi.
+
+    :param q: Search query (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing app listings.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_play", "api_key": api_key}
+    if q:
+        params["q"] = q
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        play_data = response.json()
+        logger.info(f"Retrieved Google Play app listings for query '{q}': {play_data}")
+        return play_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Play app listings for query '{q}': {e}")
+        raise
+
+def get_google_play_category_search(apps_category: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve apps from a specific Google Play category using SerpApi.
+
+    :param apps_category: Category of apps (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing apps from the specified category.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_play", "api_key": api_key}
+    if apps_category:
+        params["apps_category"] = apps_category
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        category_data = response.json()
+        logger.info(f"Retrieved Google Play apps for category '{apps_category}': {category_data}")
+        return category_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Play apps for category '{apps_category}': {e}")
+        raise
+
+def get_google_reverse_image_search(image_url: str, hl: Optional[str] = None, gl: Optional[str] = None, google_domain: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google reverse image search results by providing an image URL using SerpApi.
+
+    :param image_url: URL of the image (required).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param google_domain: Google domain to use for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing reverse image search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_reverse_image", "image_url": image_url, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if google_domain:
+        params["google_domain"] = google_domain
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        reverse_image_data = response.json()
+        logger.info(f"Retrieved reverse image search results for image URL '{image_url}': {reverse_image_data}")
+        return reverse_image_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve reverse image search results for image URL '{image_url}': {e}")
+        raise
+
+
+def get_google_videos_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve video search results from Google Videos by query using SerpApi.
+
+    :param q: Search query (required).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing video search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_videos", "q": q, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        video_data = response.json()
+        logger.info(f"Retrieved Google Videos results for query '{q}': {video_data}")
+        return video_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Videos results for query '{q}': {e}")
+        raise
+
+def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve YouTube search results by providing a search query using SerpApi.
+
+    :param search_query: Search query (required).
+    :param hl: Language for the search (optional).
+    :param gl: Geographic region for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing YouTube search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "youtube", "search_query": search_query, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        youtube_data = response.json()
+        logger.info(f"Retrieved YouTube results for query '{search_query}': {youtube_data}")
+        return youtube_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve YouTube results for query '{search_query}': {e}")
+        raise
+
+def get_yelp_basic_search(find_loc: str, find_desc: Optional[str] = None, yelp_domain: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Yelp search results by location and optional query using SerpApi.
+
+    :param find_loc: Location for the search (required).
+    :param find_desc: Description of the search (optional).
+    :param yelp_domain: Yelp domain to use for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing Yelp search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "yelp", "find_loc": find_loc, "api_key": api_key}
+    if find_desc:
+        params["find_desc"] = find_desc
+    if yelp_domain:
+        params["yelp_domain"] = yelp_domain
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        yelp_data = response.json()
+        logger.info(f"Retrieved Yelp results for location '{find_loc}': {yelp_data}")
+        return yelp_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Yelp results for location '{find_loc}': {e}")
+        raise
+
+def get_yelp_category_search(find_loc: str, cflt: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Yelp results for a specific category by location using SerpApi.
+
+    :param find_loc: Location for the search (required).
+    :param cflt: Category filter (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing Yelp category search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "yelp", "find_loc": find_loc, "api_key": api_key}
+    if cflt:
+        params["cflt"] = cflt
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        category_data = response.json()
+        logger.info(f"Retrieved Yelp category results for location '{find_loc}' with category '{cflt}': {category_data}")
+        return category_data
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Yelp category results for location '{find_loc}': {e}")
+        raise
+
+
 if __name__ == "__main__":
     tests_passed = 0
     tests_failed = 0
@@ -771,5 +1596,38 @@ if __name__ == "__main__":
     run_test("get_google_maps_place", get_google_maps_place, place_id="ChIJ9Sto4ahZwokRXpWiQYiOOOo", api_key=API_KEY)
     run_test("get_google_jobs_search", get_google_jobs_search, q="software engineer", location="New York,NY", hl="en", gl="us", api_key=API_KEY)
     run_test("get_google_shopping_search", get_google_shopping_search, q="coffee mug", gl="us", hl="en", api_key=API_KEY)
+
+    run_test("get_walmart_basic_search", get_walmart_basic_search, query="coffee maker", page=1, api_key="YOUR_API_KEY")
+    run_test("get_walmart_category_search", get_walmart_category_search, cat_id="976759_976787", page=1, api_key="YOUR_API_KEY")
+    run_test("get_google_trends_interest_over_time", get_google_trends_interest_over_time, q="coffee", date="today 12-m", geo="US", api_key="YOUR_API_KEY")
+    run_test("get_google_trends_compared_breakdown", get_google_trends_compared_breakdown, q="coffee,tea", data_type="GEO_MAP", geo="US", date="today 3-m", api_key="YOUR_API_KEY")
+    run_test("get_google_trends_interest_by_region", get_google_trends_interest_by_region, q="chocolate", data_type="GEO_MAP_0", geo="GB", region="CITY", date="today 5-y", api_key="YOUR_API_KEY")
+    run_test("get_google_hotels_basic_search", get_google_hotels_basic_search, q="New York", check_in_date="2024-12-21", check_out_date="2024-12-22", hl="en", gl="us", currency="USD", api_key="YOUR_API_KEY")
+    run_test("get_google_vacation_rentals", get_google_vacation_rentals, q="Hawaii", check_in_date="2024-12-21", check_out_date="2024-12-22", vacation_rentals=True, bedrooms=2, bathrooms=1, api_key="YOUR_API_KEY")
+    run_test("get_google_hotels_property_details", get_google_hotels_property_details, property_token="AB123XYZ", api_key="YOUR_API_KEY")
+    run_test("get_google_local_basic_search", get_google_local_basic_search, q="coffee shops", location="New York,NY", hl="en", gl="us", api_key="YOUR_API_KEY")
+
+    run_test("get_google_finance_basic_search", get_google_finance_basic_search, q="NASDAQ:GOOGL", hl="en", api_key="YOUR_API_KEY")
+    run_test("get_google_finance_currency_exchange", get_google_finance_currency_exchange, q="USD/EUR", hl="en", api_key="YOUR_API_KEY")
+    run_test("get_google_product_offers", get_google_product_offers, product_id="1234567890123456789", offers=1, filter="scoring:p", api_key="YOUR_API_KEY")
+    run_test("get_google_product_specs", get_google_product_specs, product_id="1234567890123456789", specs=1, hl="en", gl="us", api_key="YOUR_API_KEY")
+    run_test("get_google_product_reviews", get_google_product_reviews, product_id="1234567890123456789", reviews=1, filter="rnum:50", api_key="YOUR_API_KEY")
+
+    run_test("get_google_events_basic_search", get_google_events_basic_search, q="Events in Austin TX", hl="en", gl="us", location="Austin,Texas,United States", api_key="YOUR_API_KEY")
+    run_test("get_google_flights_round_trip", get_google_flights_round_trip, departure_id="AUS", arrival_id="CDG", outbound_date="2024-12-21", return_date="2024-12-27", hl="en", gl="us", currency="USD", api_key="YOUR_API_KEY")
+    run_test("get_google_flights_one_way", get_google_flights_one_way, departure_id="JFK", arrival_id="SFO", outbound_date="2024-12-21", stops=1, max_price=500, hl="en", gl="us", currency="USD", api_key="YOUR_API_KEY")
+    run_test("get_google_flights_multi_city", get_google_flights_multi_city, multi_city_json=[{"departure_id":"CDG","arrival_id":"NRT","date":"2024-12-27"},{"departure_id":"NRT","arrival_id":"LAX,SEA","date":"2025-01-03"},{"departure_id":"LAX,SEA","arrival_id":"AUS","date":"2025-01-10"}], hl="en", gl="us", currency="USD", api_key="YOUR_API_KEY")
+    run_test("get_google_flights_with_airline_filters", get_google_flights_with_airline_filters, departure_id="LHR", arrival_id="JFK", outbound_date="2024-12-21", return_date="2024-12-30", include_airlines="ONEWORLD", hl="en", gl="us", currency="USD", api_key="YOUR_API_KEY")
+
+    run_test("get_google_flights_booking_options", get_google_flights_booking_options, booking_token="ABC123xyz", api_key="YOUR_API_KEY")
+    run_test("get_google_lens_basic_search", get_google_lens_basic_search, url="https://i.imgur.com/HBrB8p0.png", hl="en", country="us", api_key="YOUR_API_KEY")
+    run_test("get_google_play_query_search", get_google_play_query_search, q="weather apps", hl="en", gl="us", api_key="YOUR_API_KEY")
+    run_test("get_google_play_category_search", get_google_play_category_search, apps_category="GAME_ACTION", hl="en", gl="us", api_key="YOUR_API_KEY")
+    run_test("get_google_reverse_image_search", get_google_reverse_image_search, image_url="https://i.imgur.com/5bGzZi7.jpg", hl="en", gl="us", google_domain="google.com", api_key="YOUR_API_KEY")
+
+    run_test("get_google_videos_basic_search", get_google_videos_basic_search, q="funny cats", hl="en", gl="us", api_key="YOUR_API_KEY")
+    run_test("get_youtube_basic_search", get_youtube_basic_search, search_query="star wars", hl="en", gl="us", api_key="YOUR_API_KEY")
+    run_test("get_yelp_basic_search", get_yelp_basic_search, find_loc="San Francisco, CA", find_desc="pizza", yelp_domain="yelp.com", api_key="YOUR_API_KEY")
+    run_test("get_yelp_category_search", get_yelp_category_search, find_loc="Los Angeles, CA", cflt="restaurants", api_key="YOUR_API_KEY")
 
     logger.info(f"Tests completed. Passed: {tests_passed}, Failed: {tests_failed}")
