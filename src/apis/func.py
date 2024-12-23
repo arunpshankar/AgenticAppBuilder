@@ -388,6 +388,7 @@ def get_random_fox_image() -> Dict[str, Any]:
         logger.error(f"Failed to retrieve random fox image: {e}")
         raise
 
+
 def get_trivia_questions(amount: Optional[int] = 1, category: Optional[int] = None, difficulty: Optional[str] = None, question_type: Optional[str] = None) -> Dict[str, Any]:
     """
     Offers random trivia questions.
@@ -416,6 +417,7 @@ def get_trivia_questions(amount: Optional[int] = 1, category: Optional[int] = No
     except requests.RequestException as e:
         logger.error(f"Failed to retrieve trivia questions: {e}")
         raise
+
 
 def get_exchange_rates(base: Optional[str] = "USD") -> Dict[str, Any]:
     """
