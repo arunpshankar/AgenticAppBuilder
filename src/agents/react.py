@@ -20,6 +20,7 @@ from src.tools.registry import get_youtube_basic_search
 from src.tools.registry import get_multiple_dog_images
 from src.tools.registry import get_random_joke_by_type
 from src.tools.registry import get_nationality_by_name
+from src.tools.registry import get_wiki_search_results
 from src.tools.registry import get_multiple_cat_facts
 from src.tools.registry import get_google_news_search
 from src.tools.registry import get_google_maps_search
@@ -39,9 +40,6 @@ from src.tools.registry import get_public_ip
 from src.tools.registry import get_cat_fact
 from src.tools.registry import get_zip_info
 from src.tools.registry import get_lyrics
-
-from src.tools.wiki import search as wiki_search
-from vertexai.generative_models import Part 
 from src.utils.io import write_to_file
 from src.config.logging import logger
 from src.config.setup import config
@@ -333,7 +331,7 @@ def run(query: str) -> str:
     gemini = GenerativeModel(config.MODEL_NAME)
 
     agent = Agent(model=gemini)
-    agent.register(Name.WIKIPEDIA, wiki_search)
+    agent.register(Name.WIKIPEDIA, get_wiki_search_results)
     agent.register(Name.GOOGLE, get_google_search_results)
     agent.register(Name.MULTIPLE_CAT_FACTS, get_multiple_cat_facts)
     agent.register(Name.CAT_BREEDS, get_cat_breeds)
