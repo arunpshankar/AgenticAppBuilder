@@ -578,6 +578,144 @@ def get_google_news_search(q: str, tbm: str = "nws", hl: Optional[str] = None, g
         raise
 
 
+def get_google_maps_search(q: Optional[str] = None, ll: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, start: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google Maps search results from SerpApi.
+
+    :param q: Search query (optional).
+    :param ll: Latitude and longitude coordinates (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Country code for the search (optional).
+    :param start: Starting index for results (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing Google Maps search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_maps", "api_key": api_key}
+    if q:
+        params["q"] = q
+    if ll:
+        params["ll"] = ll
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if start:
+        params["start"] = start
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        maps_results = response.json()
+        logger.info(f"Retrieved Google Maps search results for query '{q}': {maps_results}")
+        return maps_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Maps search results for query '{q}': {e}")
+        raise
+
+
+def get_google_maps_place(place_id: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve details of a specific place on Google Maps using place_id.
+
+    :param place_id: The place ID (required).
+    :param hl: Language for the search (optional).
+    :param gl: Country code for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing place details.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_maps", "place_id": place_id, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        place_details = response.json()
+        logger.info(f"Retrieved place details for place ID '{place_id}': {place_details}")
+        return place_details
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve place details for place ID '{place_id}': {e}")
+        raise
+
+
+def get_google_jobs_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, lrad: Optional[int] = None, ltype: Optional[str] = None, next_page_token: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google Jobs search results from SerpApi.
+
+    :param q: Search query (required).
+    :param location: Location for the job search (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Country code for the search (optional).
+    :param lrad: Search radius in miles (optional).
+    :param ltype: Location type (e.g., 'city') (optional).
+    :param next_page_token: Token for the next page of results (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing job search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_jobs", "q": q, "api_key": api_key}
+    if location:
+        params["location"] = location
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if lrad:
+        params["lrad"] = lrad
+    if ltype:
+        params["ltype"] = ltype
+    if next_page_token:
+        params["next_page_token"] = next_page_token
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        jobs_results = response.json()
+        logger.info(f"Retrieved Google Jobs search results for query '{q}': {jobs_results}")
+        return jobs_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Jobs search results for query '{q}': {e}")
+        raise
+
+
+def get_google_shopping_search(q: str, location: Optional[str] = None, google_domain: Optional[str] = None, gl: Optional[str] = None, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google Shopping search results from SerpApi.
+
+    :param q: Search query (required).
+    :param location: Location for the search (optional).
+    :param google_domain: Google domain to use (optional).
+    :param gl: Country code for the search (optional).
+    :param hl: Language for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing shopping search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"engine": "google_shopping", "q": q, "api_key": api_key}
+    if location:
+        params["location"] = location
+    if google_domain:
+        params["google_domain"] = google_domain
+    if gl:
+        params["gl"] = gl
+    if hl:
+        params["hl"] = hl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        shopping_results = response.json()
+        logger.info(f"Retrieved Google Shopping search results for query '{q}': {shopping_results}")
+        return shopping_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Shopping search results for query '{q}': {e}")
+        raise
+
+
 if __name__ == "__main__":
     tests_passed = 0
     tests_failed = 0
@@ -629,5 +767,9 @@ if __name__ == "__main__":
     run_test("get_google_image_search_results", get_google_image_search_results, q="cat memes", hl="en", gl="us", api_key=API_KEY)
     run_test("get_google_location_specific_search", get_google_location_specific_search, q="best pizza", location="Chicago,Illinois,United States", hl="en", gl="us", api_key=API_KEY)
     run_test("get_google_news_search", get_google_news_search, q="technology news", tbm="nws", hl="en", gl="us", api_key=API_KEY)
+    run_test("get_google_maps_search", get_google_maps_search, q="Coffee", ll="@40.7455096,-74.0083012,14z", api_key=API_KEY)
+    run_test("get_google_maps_place", get_google_maps_place, place_id="ChIJ9Sto4ahZwokRXpWiQYiOOOo", api_key=API_KEY)
+    run_test("get_google_jobs_search", get_google_jobs_search, q="software engineer", location="New York,NY", hl="en", gl="us", api_key=API_KEY)
+    run_test("get_google_shopping_search", get_google_shopping_search, q="coffee mug", gl="us", hl="en", api_key=API_KEY)
 
     logger.info(f"Tests completed. Passed: {tests_passed}, Failed: {tests_failed}")
