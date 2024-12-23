@@ -175,7 +175,7 @@ class Agent:
         self.tools: Dict[Name, Tool] = {}
         self.messages: List[Message] = []
         self.query = ""
-        self.max_iterations = 5
+        self.max_iterations = 10
         self.current_iteration = 0
         self.template = self.load_template()
         self.client = initialize_genai_client()
