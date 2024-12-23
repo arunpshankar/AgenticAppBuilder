@@ -1,3 +1,4 @@
+from src.config.serp import get_api_key
 from src.config.logging import logger
 from typing import Optional
 from typing import Dict 
@@ -439,42 +440,194 @@ def get_exchange_rates(base: Optional[str] = "USD") -> Dict[str, Any]:
         raise
 
 
-if __name__ == "__main__":
-    tests = [
-        {"name": "get_cat_fact", "func": get_cat_fact, "args": [], "kwargs": {}},
-        {"name": "get_cat_fact with max_length", "func": get_cat_fact, "args": [], "kwargs": {"max_length": 50}},
-        {"name": "get_multiple_cat_facts", "func": get_multiple_cat_facts, "args": [], "kwargs": {"limit": 3}},
-        {"name": "get_cat_breeds", "func": get_cat_breeds, "args": [], "kwargs": {"limit": 2}},
-        {"name": "get_random_dog_image", "func": get_random_dog_image, "args": [], "kwargs": {}},
-        {"name": "get_multiple_dog_images", "func": get_multiple_dog_images, "args": [], "kwargs": {"number": 3}},
-        {"name": "get_random_dog_breed_image", "func": get_random_dog_breed_image, "args": [], "kwargs": {"breed": "hound"}},
-        {"name": "get_random_joke", "func": get_random_joke, "args": [], "kwargs": {}},
-        {"name": "get_ten_random_jokes", "func": get_ten_random_jokes, "args": [], "kwargs": {}},
-        {"name": "get_random_joke_by_type", "func": get_random_joke_by_type, "args": [], "kwargs": {"joke_type": "programming"}},
-        {"name": "get_predicted_age_by_name", "func": get_predicted_age_by_name, "args": [], "kwargs": {"name": "michael"}},
-        {"name": "get_predicted_age_by_name with country_id", "func": get_predicted_age_by_name, "args": [], "kwargs": {"name": "michael", "country_id": "US"}},
-        {"name": "get_random_fox_image", "func": get_random_fox_image, "args": [], "kwargs": {}},
-        {"name": "get_trivia_questions", "func": get_trivia_questions, "args": [], "kwargs": {"amount": 1}},
-        {"name": "get_exchange_rates", "func": get_exchange_rates, "args": [], "kwargs": {"base": "USD"}},
-        {"name": "get_zip_info", "func": get_zip_info, "args": [], "kwargs": {"zip_code": "90210"}},
-        {"name": "get_public_ip", "func": get_public_ip, "args": [], "kwargs": {}},
-        {"name": "get_artwork_data", "func": get_artwork_data, "args": [], "kwargs": {"limit": 2, "fields": "title,artist_title"}},
-        {"name": "get_iss_location", "func": get_iss_location, "args": [], "kwargs": {}},
-        {"name": "get_lyrics", "func": get_lyrics, "args": [], "kwargs": {"artist": "Adele", "title": "Hello"}},
-        {"name": "get_gender_by_name", "func": get_gender_by_name, "args": [], "kwargs": {"name": "Michael", "country_id": "US"}},
-        {"name": "get_nationality_by_name", "func": get_nationality_by_name, "args": [], "kwargs": {"name": "Michael"}}
-    ]
+def get_google_search_results(q: str, location: Optional[str] = None, google_domain: Optional[str] = None, gl: Optional[str] = None, hl: Optional[str] = None, safe: Optional[str] = None, num: Optional[int] = None, start: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google search results using SerpApi.
 
+    :param q: Search query (required).
+    :param location: Location for the search (optional).
+    :param google_domain: Google domain to use (optional).
+    :param gl: Country code for the search (optional).
+    :param hl: Language for the search (optional).
+    :param safe: Safe search setting (optional).
+    :param num: Number of results to return (optional).
+    :param start: Starting index for results (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing the search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"q": q, "api_key": api_key}
+    if location:
+        params["location"] = location
+    if google_domain:
+        params["google_domain"] = google_domain
+    if gl:
+        params["gl"] = gl
+    if hl:
+        params["hl"] = hl
+    if safe:
+        params["safe"] = safe
+    if num:
+        params["num"] = num
+    if start:
+        params["start"] = start
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        search_results = response.json()
+        logger.info(f"Retrieved Google search results for query '{q}': {search_results}")
+        return search_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google search results for query '{q}': {e}")
+        raise
+
+
+def get_google_image_search_results(q: str, tbm: str = "isch", gl: Optional[str] = None, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google Images search results using SerpApi.
+
+    :param q: Search query (required).
+    :param tbm: Specifies image search (required, default is 'isch').
+    :param gl: Country code for the search (optional).
+    :param hl: Language for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing the image search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"q": q, "tbm": tbm, "api_key": api_key}
+    if gl:
+        params["gl"] = gl
+    if hl:
+        params["hl"] = hl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        image_results = response.json()
+        logger.info(f"Retrieved Google Images search results for query '{q}': {image_results}")
+        return image_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google Images search results for query '{q}': {e}")
+        raise
+
+
+def get_google_location_specific_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google search results simulating queries from a given geographic location.
+
+    :param q: Search query (required).
+    :param location: Geographic location (optional).
+    :param hl: Language for the search (optional).
+    :param gl: Country code for the search (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing location-specific search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"q": q, "api_key": api_key}
+    if location:
+        params["location"] = location
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        location_results = response.json()
+        logger.info(f"Retrieved location-specific search results for query '{q}': {location_results}")
+        return location_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve location-specific search results for query '{q}': {e}")
+        raise
+
+
+def get_google_news_search(q: str, tbm: str = "nws", hl: Optional[str] = None, gl: Optional[str] = None, num: Optional[int] = None, start: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+    """
+    Retrieve Google News search results using SerpApi.
+
+    :param q: Search query (required).
+    :param tbm: Specifies news search (required, default is 'nws').
+    :param hl: Language for the search (optional).
+    :param gl: Country code for the search (optional).
+    :param num: Number of results to return (optional).
+    :param start: Starting index for results (optional).
+    :param api_key: SerpApi API key (required).
+    :return: A dictionary containing the news search results.
+    :raises requests.HTTPError: If the request fails.
+    """
+    base_url = "https://serpapi.com/search"
+    params = {"q": q, "tbm": tbm, "api_key": api_key}
+    if hl:
+        params["hl"] = hl
+    if gl:
+        params["gl"] = gl
+    if num:
+        params["num"] = num
+    if start:
+        params["start"] = start
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        news_results = response.json()
+        logger.info(f"Retrieved Google News search results for query '{q}': {news_results}")
+        return news_results
+    except requests.RequestException as e:
+        logger.error(f"Failed to retrieve Google News search results for query '{q}': {e}")
+        raise
+
+
+if __name__ == "__main__":
     tests_passed = 0
     tests_failed = 0
 
-    for test in tests:
+    def run_test(test_name: str, func, *args, **kwargs):
+        """
+        Run a test case and log the result.
+
+        :param test_name: Name of the test.
+        :param func: Function to test.
+        :param args: Positional arguments for the function.
+        :param kwargs: Keyword arguments for the function.
+        """
+        global tests_passed, tests_failed
         try:
-            result = test["func"](*test.get("args", []), **test.get("kwargs", {}))
-            logger.info(f"Test '{test['name']}' passed. Output: {result}")
+            result = func(*args, **kwargs)
+            logger.info(f"Test '{test_name}' passed. Output: {result}")
             tests_passed += 1
         except Exception as e:
-            logger.error(f"Test '{test['name']}' failed. Error: {e}")
+            logger.error(f"Test '{test_name}' failed. Error: {e}")
             tests_failed += 1
+
+    # Running tests
+    run_test("get_cat_fact", get_cat_fact)
+    run_test("get_cat_fact with max_length", get_cat_fact, max_length=50)
+    run_test("get_multiple_cat_facts", get_multiple_cat_facts, limit=3)
+    run_test("get_cat_breeds", get_cat_breeds, limit=2)
+    run_test("get_random_dog_image", get_random_dog_image)
+    run_test("get_multiple_dog_images", get_multiple_dog_images, number=3)
+    run_test("get_random_dog_breed_image", get_random_dog_breed_image, breed="hound")
+    run_test("get_random_joke", get_random_joke)
+    run_test("get_ten_random_jokes", get_ten_random_jokes)
+    run_test("get_random_joke_by_type", get_random_joke_by_type, joke_type="programming")
+    run_test("get_predicted_age_by_name", get_predicted_age_by_name, name="michael")
+    run_test("get_predicted_age_by_name with country_id", get_predicted_age_by_name, name="michael", country_id="US")
+    run_test("get_random_fox_image", get_random_fox_image)
+    run_test("get_trivia_questions", get_trivia_questions, amount=1)
+    run_test("get_exchange_rates", get_exchange_rates, base="USD")
+    run_test("get_zip_info", get_zip_info, zip_code="90210")
+    run_test("get_public_ip", get_public_ip)
+    run_test("get_artwork_data", get_artwork_data, limit=2, fields="title,artist_title")
+    run_test("get_iss_location", get_iss_location)
+    run_test("get_lyrics", get_lyrics, artist="Adele", title="Hello")
+    run_test("get_gender_by_name", get_gender_by_name, name="Michael", country_id="US")
+    run_test("get_nationality_by_name", get_nationality_by_name, name="Michael")
+
+    API_KEY=get_api_key()
+    run_test("get_google_search_results", get_google_search_results, q="coffee", location="New York,NY,United States", hl="en", gl="us", api_key=API_KEY)
+    run_test("get_google_image_search_results", get_google_image_search_results, q="cat memes", hl="en", gl="us", api_key=API_KEY)
+    run_test("get_google_location_specific_search", get_google_location_specific_search, q="best pizza", location="Chicago,Illinois,United States", hl="en", gl="us", api_key=API_KEY)
+    run_test("get_google_news_search", get_google_news_search, q="technology news", tbm="nws", hl="en", gl="us", api_key=API_KEY)
 
     logger.info(f"Tests completed. Passed: {tests_passed}, Failed: {tests_failed}")
