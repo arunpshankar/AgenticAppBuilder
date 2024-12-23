@@ -22,6 +22,7 @@ from src.tools.registry import get_random_joke_by_type
 from src.tools.registry import get_nationality_by_name
 from src.tools.registry import get_wiki_search_results
 from src.tools.registry import get_multiple_cat_facts
+from src.config.client import initialize_genai_client
 from src.tools.registry import get_google_news_search
 from src.tools.registry import get_google_maps_search
 from src.tools.registry import get_google_jobs_search
@@ -32,6 +33,7 @@ from src.tools.registry import get_random_fox_image
 from src.tools.registry import get_trivia_questions
 from src.tools.registry import get_gender_by_name
 from src.tools.registry import get_exchange_rates
+from src.llm.gemini_text import generate_content
 from src.tools.registry import get_artwork_data
 from src.tools.registry import get_iss_location
 from src.tools.registry import get_random_joke
@@ -42,8 +44,6 @@ from src.tools.registry import get_zip_info
 from src.tools.registry import get_lyrics
 from src.utils.io import write_to_file
 from src.config.logging import logger
-from src.config.setup import config
-from src.llm.gemini import generate
 from src.utils.io import read_file
 from pydantic import BaseModel
 from typing import Callable
@@ -68,6 +68,7 @@ class Name(Enum):
     WIKIPEDIA = auto()
     GOOGLE = auto()
     MULTIPLE_CAT_FACTS = auto()
+    CAT_FACT = auto()
     CAT_BREEDS = auto()
     DOG_IMAGE = auto()
     MULTIPLE_DOG_IMAGES = auto()
@@ -96,6 +97,15 @@ class Name(Enum):
     GOOGLE_TRENDS_BREAKDOWN = auto()
     GOOGLE_TRENDS_REGION = auto()
     GOOGLE_LENS_SEARCH = auto()
+    GOOGLE_PLAY_SEARCH = auto()
+    GOOGLE_LOCAL_SEARCH = auto()
+    GOOGLE_EVENTS_SEARCH = auto()
+    GOOGLE_VIDEOS_SEARCH = auto()
+    GOOGLE_REVERSE_IMAGE_SEARCH = auto()
+    GOOGLE_FINANCE_SEARCH = auto()
+    GOOGLE_FINANCE_CURRENCY_EXCHANGE = auto()
+    GOOGLE_LOCATION_SPECIFIC_SEARCH = auto()
+    WALMART_SEARCH = auto()
     YOUTUBE_SEARCH = auto()
     NONE = "none"
 
@@ -154,12 +164,12 @@ class Agent:
     Defines the agent responsible for executing queries and handling tool interactions.
     """
 
-    def __init__(self, model: GenerativeModel) -> None:
+    def __init__(self, model: str) -> None:
         """
         Initializes the Agent with a generative model, tools dictionary, and a messages log.
 
         Args:
-            model (GenerativeModel): The generative model used by the agent.
+            model (str): The generative model used by the agent.
         """
         self.model = model
         self.tools: Dict[Name, Tool] = {}
@@ -168,6 +178,7 @@ class Agent:
         self.max_iterations = 5
         self.current_iteration = 0
         self.template = self.load_template()
+        self.client = initialize_genai_client()
 
     def load_template(self) -> str:
         """
@@ -314,8 +325,7 @@ class Agent:
         Returns:
             str: The model's response as a string.
         """
-        contents = [Part.from_text(prompt)]
-        response = generate(self.model, contents)
+        response = generate_content(self.client, self.model, prompt)
         return str(response) if response is not None else "No response from Gemini"
 
 def run(query: str) -> str:
@@ -328,11 +338,12 @@ def run(query: str) -> str:
     Returns:
         str: The agent's final answer.
     """
-    gemini = GenerativeModel(config.MODEL_NAME)
-
-    agent = Agent(model=gemini)
+    model = "gemini-2.0-flash-exp"
+    agent = Agent(model=model)
     agent.register(Name.WIKIPEDIA, get_wiki_search_results)
     agent.register(Name.GOOGLE, get_google_search_results)
+    agent.register(Name.CAT_FACT, get_cat_fact)
+    agent.register(Name.WALMART_SEARCH, get_walmart_basic_search)
     agent.register(Name.MULTIPLE_CAT_FACTS, get_multiple_cat_facts)
     agent.register(Name.CAT_BREEDS, get_cat_breeds)
     agent.register(Name.DOG_IMAGE, get_random_dog_image)
@@ -363,6 +374,14 @@ def run(query: str) -> str:
     agent.register(Name.GOOGLE_TRENDS_REGION, get_google_trends_interest_by_region)
     agent.register(Name.GOOGLE_LENS_SEARCH, get_google_lens_basic_search)
     agent.register(Name.YOUTUBE_SEARCH, get_youtube_basic_search)
+    agent.register(Name.GOOGLE_PLAY_SEARCH, get_google_play_query_search)
+    agent.register(Name.GOOGLE_LOCAL_SEARCH, get_google_local_basic_search)
+    agent.register(Name.GOOGLE_VIDEOS_SEARCH, get_google_videos_basic_search)
+    agent.register(Name.GOOGLE_EVENTS_SEARCH, get_google_events_basic_search)
+    agent.register(Name.GOOGLE_REVERSE_IMAGE_SEARCH, get_google_reverse_image_search)
+    agent.register(Name.GOOGLE_FINANCE_SEARCH, get_google_finance_basic_search)
+    agent.register(Name.GOOGLE_FINANCE_CURRENCY_EXCHANGE, get_google_finance_currency_exchange)
+    agent.register(Name.GOOGLE_LOCATION_SPECIFIC_SEARCH, get_google_location_specific_search)
     answer = agent.execute(query)
     return answer
 
