@@ -1,7 +1,51 @@
+from src.tools.registry import get_google_trends_interest_over_time
+from src.tools.registry import get_google_trends_compared_breakdown
+from src.tools.registry import get_google_trends_interest_by_region
+from src.tools.registry import get_google_finance_currency_exchange
+from src.tools.registry import get_google_location_specific_search
+from src.tools.registry import get_google_image_search_results
+from src.tools.registry import get_google_finance_basic_search
+from src.tools.registry import get_google_reverse_image_search
+from src.tools.registry import get_google_events_basic_search
+from src.tools.registry import get_google_videos_basic_search
+from src.tools.registry import get_google_local_basic_search
+from src.tools.registry import get_google_lens_basic_search
+from src.tools.registry import get_google_play_query_search
+from src.tools.registry import get_random_dog_breed_image
+from src.tools.registry import get_google_shopping_search
+from src.tools.registry import get_predicted_age_by_name
+from src.tools.registry import get_google_search_results
+from src.tools.registry import get_walmart_basic_search
+from src.tools.registry import get_youtube_basic_search
+from src.tools.registry import get_multiple_dog_images
+from src.tools.registry import get_random_joke_by_type
+from src.tools.registry import get_nationality_by_name
+from src.tools.registry import get_multiple_cat_facts
+from src.tools.registry import get_google_news_search
+from src.tools.registry import get_google_maps_search
+from src.tools.registry import get_google_jobs_search
+from src.tools.registry import get_google_maps_place
+from src.tools.registry import get_random_dog_image
+from src.tools.registry import get_ten_random_jokes
+from src.tools.registry import get_random_fox_image
+from src.tools.registry import get_trivia_questions
+from src.tools.registry import get_gender_by_name
+from src.tools.registry import get_exchange_rates
+from src.tools.registry import get_artwork_data
+from src.tools.registry import get_iss_location
+from src.tools.registry import get_random_joke
+from src.tools.registry import get_cat_breeds
+from src.tools.registry import get_public_ip
+from src.tools.registry import get_cat_fact
+from src.tools.registry import get_zip_info
+from src.tools.registry import get_lyrics
+
+from src.tools.wiki import search as wiki_search
+from vertexai.generative_models import Part 
 from src.utils.io import write_to_file
 from src.config.logging import logger
 from src.config.setup import config
-
+from src.llm.gemini import generate
 from src.utils.io import read_file
 from pydantic import BaseModel
 from typing import Callable
@@ -16,8 +60,8 @@ import json
 
 Observation = Union[str, Exception]
 
-PROMPT_TEMPLATE_PATH = "./data/input/react.txt"
-OUTPUT_TRACE_PATH = "./data/output/trace.txt"
+PROMPT_TEMPLATE_PATH = "./templates/react.txt"
+OUTPUT_TRACE_PATH = "./data/trace.txt"
 
 class Name(Enum):
     """
@@ -25,13 +69,37 @@ class Name(Enum):
     """
     WIKIPEDIA = auto()
     GOOGLE = auto()
-    NONE = auto()
-
-    def __str__(self) -> str:
-        """
-        String representation of the tool name.
-        """
-        return self.name.lower()
+    MULTIPLE_CAT_FACTS = auto()
+    CAT_BREEDS = auto()
+    DOG_IMAGE = auto()
+    MULTIPLE_DOG_IMAGES = auto()
+    DOG_BREED_IMAGE = auto()
+    RANDOM_JOKE = auto()
+    TEN_RANDOM_JOKES = auto()
+    RANDOM_JOKE_BY_TYPE = auto()
+    PREDICT_AGE = auto()
+    PREDICT_GENDER = auto()
+    PREDICT_NATIONALITY = auto()
+    ZIP_INFO = auto()
+    PUBLIC_IP = auto()
+    ARTWORK_DATA = auto()
+    ISS_LOCATION = auto()
+    LYRICS = auto()
+    RANDOM_FOX_IMAGE = auto()
+    TRIVIA_QUESTIONS = auto()
+    EXCHANGE_RATES = auto()
+    GOOGLE_IMAGE_SEARCH = auto()
+    GOOGLE_NEWS_SEARCH = auto()
+    GOOGLE_MAPS_SEARCH = auto()
+    GOOGLE_MAPS_PLACE = auto()
+    GOOGLE_JOBS_SEARCH = auto()
+    GOOGLE_SHOPPING_SEARCH = auto()
+    GOOGLE_TRENDS_INTEREST = auto()
+    GOOGLE_TRENDS_BREAKDOWN = auto()
+    GOOGLE_TRENDS_REGION = auto()
+    GOOGLE_LENS_SEARCH = auto()
+    YOUTUBE_SEARCH = auto()
+    NONE = "none"
 
 
 class Choice(BaseModel):
@@ -266,8 +334,37 @@ def run(query: str) -> str:
 
     agent = Agent(model=gemini)
     agent.register(Name.WIKIPEDIA, wiki_search)
-    agent.register(Name.GOOGLE, google_search)
-
+    agent.register(Name.GOOGLE, get_google_search_results)
+    agent.register(Name.MULTIPLE_CAT_FACTS, get_multiple_cat_facts)
+    agent.register(Name.CAT_BREEDS, get_cat_breeds)
+    agent.register(Name.DOG_IMAGE, get_random_dog_image)
+    agent.register(Name.MULTIPLE_DOG_IMAGES, get_multiple_dog_images)
+    agent.register(Name.DOG_BREED_IMAGE, get_random_dog_breed_image)
+    agent.register(Name.RANDOM_JOKE, get_random_joke)
+    agent.register(Name.TEN_RANDOM_JOKES, get_ten_random_jokes)
+    agent.register(Name.RANDOM_JOKE_BY_TYPE, get_random_joke_by_type)
+    agent.register(Name.PREDICT_AGE, get_predicted_age_by_name)
+    agent.register(Name.PREDICT_GENDER, get_gender_by_name)
+    agent.register(Name.PREDICT_NATIONALITY, get_nationality_by_name)
+    agent.register(Name.ZIP_INFO, get_zip_info)
+    agent.register(Name.PUBLIC_IP, get_public_ip)
+    agent.register(Name.ARTWORK_DATA, get_artwork_data)
+    agent.register(Name.ISS_LOCATION, get_iss_location)
+    agent.register(Name.LYRICS, get_lyrics)
+    agent.register(Name.RANDOM_FOX_IMAGE, get_random_fox_image)
+    agent.register(Name.TRIVIA_QUESTIONS, get_trivia_questions)
+    agent.register(Name.EXCHANGE_RATES, get_exchange_rates)
+    agent.register(Name.GOOGLE_IMAGE_SEARCH, get_google_image_search_results)
+    agent.register(Name.GOOGLE_NEWS_SEARCH, get_google_news_search)
+    agent.register(Name.GOOGLE_MAPS_SEARCH, get_google_maps_search)
+    agent.register(Name.GOOGLE_MAPS_PLACE, get_google_maps_place)
+    agent.register(Name.GOOGLE_JOBS_SEARCH, get_google_jobs_search)
+    agent.register(Name.GOOGLE_SHOPPING_SEARCH, get_google_shopping_search)
+    agent.register(Name.GOOGLE_TRENDS_INTEREST, get_google_trends_interest_over_time)
+    agent.register(Name.GOOGLE_TRENDS_BREAKDOWN, get_google_trends_compared_breakdown)
+    agent.register(Name.GOOGLE_TRENDS_REGION, get_google_trends_interest_by_region)
+    agent.register(Name.GOOGLE_LENS_SEARCH, get_google_lens_basic_search)
+    agent.register(Name.YOUTUBE_SEARCH, get_youtube_basic_search)
     answer = agent.execute(query)
     return answer
 
