@@ -4,7 +4,45 @@ from typing import Optional
 from typing import Dict 
 from typing import List 
 from typing import Any 
+import wikipediaapi
 import requests
+import json
+
+
+def get_wiki_search_results(query: str) -> Optional[str]:
+    """
+    Fetch Wikipedia information for a given search query using Wikipedia-API and return as JSON.
+
+    Args:
+        query (str): The search query string.
+
+    Returns:
+        Optional[str]: A JSON string containing the query, title, and summary, or None if no result is found.
+    """
+    # Initialize Wikipedia API with a user agent
+    wiki = wikipediaapi.Wikipedia(user_agent='ReAct Agents (shankar.arunp@gmail.com)',
+                                  language='en')
+
+    try:
+        logger.info(f"Searching Wikipedia for: {query}")
+        page = wiki.page(query)
+
+        if page.exists():
+            # Create a dictionary with query, title, and summary
+            result = {
+                "query": query,
+                "title": page.title,
+                "summary": page.summary
+            }
+            logger.info(f"Successfully retrieved summary for: {query}")
+            return json.dumps(result, ensure_ascii=False, indent=2)
+        else:
+            logger.info(f"No results found for query: {query}")
+            return None
+
+    except Exception as e:
+        logger.exception(f"An error occurred while processing the Wikipedia query: {e}")
+        return None
 
 
 def get_cat_fact(max_length: Optional[int] = None) -> Dict[str, Any]:
@@ -777,6 +815,7 @@ def get_google_trends_interest_over_time(q: str, date: Optional[str] = None, hl:
         logger.error(f"Failed to retrieve Google Trends 'Interest over time' data for query '{q}': {e}")
         raise
 
+
 def get_google_trends_compared_breakdown(q: str, data_type: str = "GEO_MAP", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
     """
     Retrieve 'Compared breakdown by region' data for multiple queries using SerpApi's Google Trends API.
@@ -872,7 +911,6 @@ def get_google_local_basic_search(q: str, location: Optional[str] = None, hl: Op
         raise
 
 
-
 def get_google_finance_basic_search(q: str, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
     """
     Retrieve Google Finance data for a given ticker or search query from SerpApi.
@@ -896,6 +934,7 @@ def get_google_finance_basic_search(q: str, hl: Optional[str] = None, api_key: s
     except requests.RequestException as e:
         logger.error(f"Failed to retrieve Google Finance data for query '{q}': {e}")
         raise
+
 
 def get_google_finance_currency_exchange(q: str, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
     """
@@ -979,6 +1018,7 @@ def get_google_lens_basic_search(url: str, hl: Optional[str] = None, country: Op
     except requests.RequestException as e:
         logger.error(f"Failed to retrieve Google Lens results for image URL '{url}': {e}")
         raise
+
 
 def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
     """
@@ -1068,6 +1108,7 @@ def get_google_videos_basic_search(q: str, hl: Optional[str] = None, gl: Optiona
         logger.error(f"Failed to retrieve Google Videos results for query '{q}': {e}")
         raise
 
+
 def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
     """
     Retrieve YouTube search results by providing a search query using SerpApi.
@@ -1121,6 +1162,7 @@ if __name__ == "__main__":
     # Running tests
     API_KEY=get_api_key()
     
+    run_test("get_wiki_search_results", get_wiki_search_results, "Python (programming language)")
     run_test("get_cat_fact", get_cat_fact)
     run_test("get_cat_fact with max_length", get_cat_fact, max_length=50)
     run_test("get_multiple_cat_facts", get_multiple_cat_facts, limit=3)

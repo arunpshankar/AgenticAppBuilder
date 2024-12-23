@@ -53,3 +53,4 @@ typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
 websockets==14.1
+Wikipedia-API==0.7.1
