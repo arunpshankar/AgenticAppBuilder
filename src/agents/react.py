@@ -165,7 +165,7 @@ class Agent:
     Defines the agent responsible for executing queries and handling tool interactions.
     """
 
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, max_iterations) -> None:
         """
         Initializes the Agent with a generative model, tools dictionary, and a messages log.
 
@@ -176,7 +176,7 @@ class Agent:
         self.tools: Dict[Name, Tool] = {}
         self.messages: List[Message] = []
         self.query = ""
-        self.max_iterations = 3
+        self.max_iterations = max_iterations
         self.current_iteration = 0
         self.template = self.load_template()
         self.client = initialize_genai_client()
@@ -320,8 +320,6 @@ class Agent:
         Returns:
             str: The model's response as a string.
         """
-        print(prompt)
-        print('=' * 100)
         response = generate_content(self.client, self.model, prompt)
         if response:
             response = str(response.text)
@@ -332,11 +330,10 @@ class Agent:
         if cleaned_response.startswith('json'):
             cleaned_response = cleaned_response[4:].strip()
         parsed_response = json.loads(cleaned_response)
-        print('>>>>', parsed_response)
         return parsed_response
     
 
-def run(query: str) -> str:
+def run(query: str, n: int) -> str:
     """
     Sets up the agent, registers tools, and executes a query.
 
@@ -347,7 +344,7 @@ def run(query: str) -> str:
         str: The agent's final answer.
     """
     model = "gemini-2.0-flash-exp"
-    agent = Agent(model=model)
+    agent = Agent(model=model, max_iterations=n)
     agent.register(Name.WIKIPEDIA, get_wiki_search_results)
     agent.register(Name.GOOGLE, get_google_search_results)
     agent.register(Name.CAT_FACT, get_cat_fact)
@@ -395,7 +392,7 @@ def run(query: str) -> str:
 
 
 if __name__ == "__main__":
-    query = "tell me 5 cat facts"
-    final_answer = run(query)
+    query = "3 cat facts and appropiate images for them"
+    final_answer = run(query, 10)
     logger.info(final_answer)
     
