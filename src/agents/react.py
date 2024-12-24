@@ -40,7 +40,6 @@ from src.tools.registry import get_random_joke
 from src.tools.registry import get_cat_breeds
 from src.tools.registry import get_public_ip
 from src.tools.registry import get_cat_fact
-from vertexai.generative_models import Part 
 from src.tools.registry import get_zip_info
 from src.tools.registry import get_lyrics
 from src.utils.io import write_to_file
@@ -66,8 +65,8 @@ class Name(Enum):
     """
     Enumeration for tool names available to the agent.
     """
-    WIKIPEDIA = auto()
-    GOOGLE = auto()
+    WIKI_SEARCH = auto()
+    GOOGLE_SEARCH = auto()
     MULTIPLE_CAT_FACTS = auto()
     CAT_FACT = auto()
     CAT_BREEDS = auto()
@@ -345,8 +344,8 @@ def run(query: str, n: int) -> str:
     """
     model = "gemini-2.0-flash-exp"
     agent = Agent(model=model, max_iterations=n)
-    agent.register(Name.WIKIPEDIA, get_wiki_search_results)
-    agent.register(Name.GOOGLE, get_google_search_results)
+    agent.register(Name.WIKI_SEARCH, get_wiki_search_results)
+    agent.register(Name.GOOGLE_SEARCH, get_google_search_results)
     agent.register(Name.CAT_FACT, get_cat_fact)
     agent.register(Name.WALMART_SEARCH, get_walmart_basic_search)
     agent.register(Name.MULTIPLE_CAT_FACTS, get_multiple_cat_facts)
@@ -392,7 +391,7 @@ def run(query: str, n: int) -> str:
 
 
 if __name__ == "__main__":
-    query = "3 cat facts and appropiate images for them"
+    query = "find local restaurants near frisco, texas indian and find me the best one which serves mutton briyani"
     final_answer = run(query, 10)
     logger.info(final_answer)
     
