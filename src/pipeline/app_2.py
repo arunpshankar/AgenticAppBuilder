@@ -1,20 +1,13 @@
-# ================================
-# streamlit_app.py
-# ================================
-
+from src.agents.react import run as run_react_agent
 from src.config.setup import GOOGLE_ICON_PATH
 from src.config.setup import PROJECT_ROOT
 from src.config.logging import logger
 import streamlit as st
-import os
 import importlib.util
 import json
-import re
 import ast
-
-# ==== [ Agent Code ] ====
-# Make sure run_gemini_agent is writing to ./data/trace.txt
-from src.agents.react import run as run_gemini_agent
+import re
+import os
 
 
 def load_available_apps():
@@ -428,7 +421,7 @@ def run():
 
         # 3) Run the agent
         query = st.session_state["explore_question"]
-        final_answer = run_gemini_agent(query, max_iterations)
+        final_answer = run_react_agent(query, max_iterations)
         st.session_state["agent_final_answer"] = final_answer
 
         # 4) Rerun the app so that parse_agent_trace() can pick up new contents
