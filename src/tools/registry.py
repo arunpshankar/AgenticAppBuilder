@@ -478,7 +478,7 @@ def get_exchange_rates(base: Optional[str] = "USD") -> Dict[str, Any]:
         raise
 
 
-def get_google_search_results(q: str, location: Optional[str] = None, google_domain: Optional[str] = None, gl: Optional[str] = None, hl: Optional[str] = None, safe: Optional[str] = None, num: Optional[int] = None, start: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_search_results(q: str, location: Optional[str] = None, google_domain: Optional[str] = None, gl: Optional[str] = None, hl: Optional[str] = None, safe: Optional[str] = None, num: Optional[int] = None, start: Optional[int] = None) -> Dict[str, Any]:
     """
     Retrieve Google search results using SerpApi.
 
@@ -490,12 +490,11 @@ def get_google_search_results(q: str, location: Optional[str] = None, google_dom
     :param safe: Safe search setting (optional).
     :param num: Number of results to return (optional).
     :param start: Starting index for results (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing the search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"q": q, "api_key": api_key}
+    params = {"q": q, "api_key": get_api_key()}
     if location:
         params["location"] = location
     if google_domain:
@@ -521,7 +520,7 @@ def get_google_search_results(q: str, location: Optional[str] = None, google_dom
         raise
 
 
-def get_google_image_search_results(q: str, tbm: str = "isch", gl: Optional[str] = None, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_image_search_results(q: str, tbm: str = "isch", gl: Optional[str] = None, hl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google Images search results using SerpApi.
 
@@ -529,12 +528,11 @@ def get_google_image_search_results(q: str, tbm: str = "isch", gl: Optional[str]
     :param tbm: Specifies image search (required, default is 'isch').
     :param gl: Country code for the search (optional).
     :param hl: Language for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing the image search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"q": q, "tbm": tbm, "api_key": api_key}
+    params = {"q": q, "tbm": tbm, "api_key": get_api_key()}
     if gl:
         params["gl"] = gl
     if hl:
@@ -550,7 +548,7 @@ def get_google_image_search_results(q: str, tbm: str = "isch", gl: Optional[str]
         raise
 
 
-def get_google_location_specific_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_location_specific_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google search results simulating queries from a given geographic location.
 
@@ -558,12 +556,11 @@ def get_google_location_specific_search(q: str, location: Optional[str] = None, 
     :param location: Geographic location (optional).
     :param hl: Language for the search (optional).
     :param gl: Country code for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing location-specific search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"q": q, "api_key": api_key}
+    params = {"q": q, "api_key": get_api_key()}
     if location:
         params["location"] = location
     if hl:
@@ -581,7 +578,7 @@ def get_google_location_specific_search(q: str, location: Optional[str] = None, 
         raise
 
 
-def get_google_news_search(q: str, tbm: str = "nws", hl: Optional[str] = None, gl: Optional[str] = None, num: Optional[int] = None, start: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_news_search(q: str, tbm: str = "nws", hl: Optional[str] = None, gl: Optional[str] = None, num: Optional[int] = None, start: Optional[int] = None) -> Dict[str, Any]:
     """
     Retrieve Google News search results using SerpApi.
 
@@ -596,7 +593,7 @@ def get_google_news_search(q: str, tbm: str = "nws", hl: Optional[str] = None, g
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"q": q, "tbm": tbm, "api_key": api_key}
+    params = {"q": q, "tbm": tbm, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -616,7 +613,7 @@ def get_google_news_search(q: str, tbm: str = "nws", hl: Optional[str] = None, g
         raise
 
 
-def get_google_maps_search(q: Optional[str] = None, ll: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, start: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_maps_search(q: Optional[str] = None, ll: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, start: Optional[int] = None) -> Dict[str, Any]:
     """
     Retrieve Google Maps search results from SerpApi.
 
@@ -630,7 +627,7 @@ def get_google_maps_search(q: Optional[str] = None, ll: Optional[str] = None, hl
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_maps", "api_key": api_key}
+    params = {"engine": "google_maps", "api_key": get_api_key()}
     if q:
         params["q"] = q
     if ll:
@@ -652,7 +649,7 @@ def get_google_maps_search(q: Optional[str] = None, ll: Optional[str] = None, hl
         raise
 
 
-def get_google_maps_place(place_id: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_maps_place(place_id: str, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve details of a specific place on Google Maps using place_id.
 
@@ -664,7 +661,7 @@ def get_google_maps_place(place_id: str, hl: Optional[str] = None, gl: Optional[
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_maps", "place_id": place_id, "api_key": api_key}
+    params = {"engine": "google_maps", "place_id": place_id, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -680,7 +677,7 @@ def get_google_maps_place(place_id: str, hl: Optional[str] = None, gl: Optional[
         raise
 
 
-def get_google_jobs_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, lrad: Optional[int] = None, ltype: Optional[str] = None, next_page_token: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_jobs_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, lrad: Optional[int] = None, ltype: Optional[str] = None, next_page_token: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google Jobs search results from SerpApi.
 
@@ -696,7 +693,7 @@ def get_google_jobs_search(q: str, location: Optional[str] = None, hl: Optional[
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_jobs", "q": q, "api_key": api_key}
+    params = {"engine": "google_jobs", "q": q, "api_key": get_api_key()}
     if location:
         params["location"] = location
     if hl:
@@ -720,7 +717,7 @@ def get_google_jobs_search(q: str, location: Optional[str] = None, hl: Optional[
         raise
 
 
-def get_google_shopping_search(q: str, location: Optional[str] = None, google_domain: Optional[str] = None, gl: Optional[str] = None, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_shopping_search(q: str, location: Optional[str] = None, google_domain: Optional[str] = None, gl: Optional[str] = None, hl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google Shopping search results from SerpApi.
 
@@ -729,12 +726,11 @@ def get_google_shopping_search(q: str, location: Optional[str] = None, google_do
     :param google_domain: Google domain to use (optional).
     :param gl: Country code for the search (optional).
     :param hl: Language for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing shopping search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_shopping", "q": q, "api_key": api_key}
+    params = {"engine": "google_shopping", "q": q, "api_key": get_api_key()}
     if location:
         params["location"] = location
     if google_domain:
@@ -754,18 +750,17 @@ def get_google_shopping_search(q: str, location: Optional[str] = None, google_do
         raise
 
 
-def get_walmart_basic_search(query: str, page: Optional[int] = None, api_key: str = "") -> Dict[str, Any]:
+def get_walmart_basic_search(query: str, page: Optional[int] = None) -> Dict[str, Any]:
     """
     Retrieve Walmart search results using a query from SerpApi.
 
     :param query: Search query (required).
     :param page: Page number for results (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing Walmart search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "walmart", "query": query, "api_key": api_key}
+    params = {"engine": "walmart", "query": query, "api_key": get_api_key()}
     if page:
         params["page"] = page
     try:
@@ -779,7 +774,7 @@ def get_walmart_basic_search(query: str, page: Optional[int] = None, api_key: st
         raise
 
 
-def get_google_trends_interest_over_time(q: str, date: Optional[str] = None, hl: Optional[str] = None, geo: Optional[str] = None, tz: Optional[int] = None, gprop: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_trends_interest_over_time(q: str, date: Optional[str] = None, hl: Optional[str] = None, geo: Optional[str] = None, tz: Optional[int] = None, gprop: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve 'Interest over time' data for a given query using SerpApi's Google Trends API.
 
@@ -789,12 +784,11 @@ def get_google_trends_interest_over_time(q: str, date: Optional[str] = None, hl:
     :param geo: Geographic region (optional).
     :param tz: Timezone offset (optional).
     :param gprop: Google property (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing interest over time data.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_trends", "q": q, "api_key": api_key}
+    params = {"engine": "google_trends", "q": q, "api_key": get_api_key()}
     if date:
         params["date"] = date
     if hl:
@@ -816,7 +810,7 @@ def get_google_trends_interest_over_time(q: str, date: Optional[str] = None, hl:
         raise
 
 
-def get_google_trends_compared_breakdown(q: str, data_type: str = "GEO_MAP", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_trends_compared_breakdown(q: str, data_type: str = "GEO_MAP", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve 'Compared breakdown by region' data for multiple queries using SerpApi's Google Trends API.
 
@@ -830,7 +824,7 @@ def get_google_trends_compared_breakdown(q: str, data_type: str = "GEO_MAP", geo
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_trends", "q": q, "data_type": data_type, "api_key": api_key}
+    params = {"engine": "google_trends", "q": q, "data_type": data_type, "api_key": get_api_key()}
     if geo:
         params["geo"] = geo
     if region:
@@ -848,7 +842,7 @@ def get_google_trends_compared_breakdown(q: str, data_type: str = "GEO_MAP", geo
         raise
 
 
-def get_google_trends_interest_by_region(q: str, data_type: str = "GEO_MAP_0", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_trends_interest_by_region(q: str, data_type: str = "GEO_MAP_0", geo: Optional[str] = None, region: Optional[str] = None, date: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve 'Interest by region' data for a single query using SerpApi's Google Trends API.
 
@@ -857,12 +851,11 @@ def get_google_trends_interest_by_region(q: str, data_type: str = "GEO_MAP_0", g
     :param geo: Geographic region (optional).
     :param region: Specific region (optional).
     :param date: Date range for the trends (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing interest by region data.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_trends", "q": q, "data_type": data_type, "api_key": api_key}
+    params = {"engine": "google_trends", "q": q, "data_type": data_type, "api_key": get_api_key()}
     if geo:
         params["geo"] = geo
     if region:
@@ -880,7 +873,7 @@ def get_google_trends_interest_by_region(q: str, data_type: str = "GEO_MAP_0", g
         raise
 
 
-def get_google_local_basic_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_local_basic_search(q: str, location: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve local business results by query using SerpApi's Google Local API.
 
@@ -888,12 +881,11 @@ def get_google_local_basic_search(q: str, location: Optional[str] = None, hl: Op
     :param location: Location for the search (optional).
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing local business results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_local", "q": q, "api_key": api_key}
+    params = {"engine": "google_local", "q": q, "api_key": get_api_key()}
     if location:
         params["location"] = location
     if hl:
@@ -911,18 +903,17 @@ def get_google_local_basic_search(q: str, location: Optional[str] = None, hl: Op
         raise
 
 
-def get_google_finance_basic_search(q: str, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_finance_basic_search(q: str, hl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google Finance data for a given ticker or search query from SerpApi.
 
     :param q: Search query or ticker (required).
     :param hl: Language for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing Google Finance data.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_finance", "q": q, "api_key": api_key}
+    params = {"engine": "google_finance", "q": q, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     try:
@@ -936,18 +927,17 @@ def get_google_finance_basic_search(q: str, hl: Optional[str] = None, api_key: s
         raise
 
 
-def get_google_finance_currency_exchange(q: str, hl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_finance_currency_exchange(q: str, hl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve exchange rate data for a currency pair using SerpApi.
 
     :param q: Currency pair (e.g., 'USD/EUR') (required).
     :param hl: Language for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing currency exchange rate data.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_finance", "q": q, "api_key": api_key}
+    params = {"engine": "google_finance", "q": q, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     try:
@@ -961,7 +951,7 @@ def get_google_finance_currency_exchange(q: str, hl: Optional[str] = None, api_k
         raise
 
 
-def get_google_events_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None, location: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_events_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None, location: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve events based on a query using SerpApi's Google Events API.
 
@@ -969,12 +959,11 @@ def get_google_events_basic_search(q: str, hl: Optional[str] = None, gl: Optiona
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
     :param location: Location for the events (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing events data.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_events", "q": q, "api_key": api_key}
+    params = {"engine": "google_events", "q": q, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -992,19 +981,18 @@ def get_google_events_basic_search(q: str, hl: Optional[str] = None, gl: Optiona
         raise
 
 
-def get_google_lens_basic_search(url: str, hl: Optional[str] = None, country: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_lens_basic_search(url: str, hl: Optional[str] = None, country: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google Lens results by providing an image URL using SerpApi.
 
     :param url: URL of the image (required).
     :param hl: Language for the search (optional).
     :param country: Country for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing Google Lens results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_lens", "url": url, "api_key": api_key}
+    params = {"engine": "google_lens", "url": url, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if country:
@@ -1020,19 +1008,18 @@ def get_google_lens_basic_search(url: str, hl: Optional[str] = None, country: Op
         raise
 
 
-def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve app listings from the Google Play Store by search query using SerpApi.
 
     :param q: Search query (optional).
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing app listings.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_play", "api_key": api_key}
+    params = {"engine": "google_play", "api_key": get_api_key()}
     if q:
         params["q"] = q
     if hl:
@@ -1050,7 +1037,7 @@ def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = No
         raise
 
 
-def get_google_reverse_image_search(image_url: str, hl: Optional[str] = None, gl: Optional[str] = None, google_domain: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_reverse_image_search(image_url: str, hl: Optional[str] = None, gl: Optional[str] = None, google_domain: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve Google reverse image search results by providing an image URL using SerpApi.
 
@@ -1058,12 +1045,11 @@ def get_google_reverse_image_search(image_url: str, hl: Optional[str] = None, gl
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
     :param google_domain: Google domain to use for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing reverse image search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_reverse_image", "image_url": image_url, "api_key": api_key}
+    params = {"engine": "google_reverse_image", "image_url": image_url, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -1081,19 +1067,18 @@ def get_google_reverse_image_search(image_url: str, hl: Optional[str] = None, gl
         raise
 
 
-def get_google_videos_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_google_videos_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve video search results from Google Videos by query using SerpApi.
 
     :param q: Search query (required).
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing video search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "google_videos", "q": q, "api_key": api_key}
+    params = {"engine": "google_videos", "q": q, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -1109,19 +1094,18 @@ def get_google_videos_basic_search(q: str, hl: Optional[str] = None, gl: Optiona
         raise
 
 
-def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Optional[str] = None, api_key: str = "") -> Dict[str, Any]:
+def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve YouTube search results by providing a search query using SerpApi.
 
     :param search_query: Search query (required).
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
-    :param api_key: SerpApi API key (required).
     :return: A dictionary containing YouTube search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "youtube", "search_query": search_query, "api_key": api_key}
+    params = {"engine": "youtube", "search_query": search_query, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -1160,8 +1144,6 @@ if __name__ == "__main__":
             tests_failed += 1
 
     # Running tests
-    API_KEY=get_api_key()
-    
     run_test("get_wiki_search_results", get_wiki_search_results, "Python (programming language)")
     run_test("get_cat_fact", get_cat_fact)
     run_test("get_cat_fact with max_length", get_cat_fact, max_length=50)
@@ -1185,26 +1167,27 @@ if __name__ == "__main__":
     run_test("get_lyrics", get_lyrics, artist="Adele", title="Hello")
     run_test("get_gender_by_name", get_gender_by_name, name="Michael", country_id="US")
     run_test("get_nationality_by_name", get_nationality_by_name, name="Michael")
-    run_test("get_google_search_results", get_google_search_results, q="coffee", location="New York,NY,United States", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_image_search_results", get_google_image_search_results, q="cat memes", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_location_specific_search", get_google_location_specific_search, q="best pizza", location="Chicago,Illinois,United States", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_news_search", get_google_news_search, q="technology news", tbm="nws", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_maps_search", get_google_maps_search, q="Coffee", ll="@40.7455096,-74.0083012,14z", api_key=API_KEY)
-    run_test("get_google_maps_place", get_google_maps_place, place_id="ChIJ9Sto4ahZwokRXpWiQYiOOOo", api_key=API_KEY)
-    run_test("get_google_jobs_search", get_google_jobs_search, q="software engineer", location="New York,NY", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_shopping_search", get_google_shopping_search, q="coffee mug", gl="us", hl="en", api_key=API_KEY)
-    run_test("get_walmart_basic_search", get_walmart_basic_search, query="coffee maker", page=1, api_key=API_KEY)
-    run_test("get_google_trends_interest_over_time", get_google_trends_interest_over_time, q="coffee", date="today 12-m", geo="US", api_key=API_KEY)
-    run_test("get_google_trends_compared_breakdown", get_google_trends_compared_breakdown, q="coffee,tea", data_type="GEO_MAP", geo="US", date="today 3-m", api_key=API_KEY)
-    run_test("get_google_trends_interest_by_region", get_google_trends_interest_by_region, q="chocolate", data_type="GEO_MAP_0", geo="GB", region="CITY", date="today 5-y", api_key=API_KEY)
-    run_test("get_google_local_basic_search", get_google_local_basic_search, q="coffee shops", location="New York,NY", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_finance_basic_search", get_google_finance_basic_search, q="NASDAQ:GOOGL", hl="en", api_key=API_KEY)
-    run_test("get_google_finance_currency_exchange", get_google_finance_currency_exchange, q="USD/EUR", hl="en", api_key=API_KEY)
-    run_test("get_google_events_basic_search", get_google_events_basic_search, q="Events in Austin TX", hl="en", gl="us", location="Austin,Texas,United States", api_key=API_KEY)
-    run_test("get_google_lens_basic_search", get_google_lens_basic_search, url="https://i.imgur.com/HBrB8p0.png", hl="en", country="us", api_key=API_KEY)
-    run_test("get_google_play_query_search", get_google_play_query_search, q="weather apps", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_google_reverse_image_search", get_google_reverse_image_search, image_url="https://i.imgur.com/5bGzZi7.jpg", hl="en", gl="us", google_domain="google.com", api_key=API_KEY)
-    run_test("get_google_videos_basic_search", get_google_videos_basic_search, q="funny cats", hl="en", gl="us", api_key=API_KEY)
-    run_test("get_youtube_basic_search", get_youtube_basic_search, search_query="star wars", hl="en", gl="us", api_key=API_KEY)
+    run_test("get_google_search_results", get_google_search_results, q="coffee", location="New York,NY,United States", hl="en", gl="us")
+    run_test("get_google_image_search_results", get_google_image_search_results, q="cat memes", hl="en", gl="us")
+    run_test("get_google_location_specific_search", get_google_location_specific_search, q="best pizza", location="Chicago,Illinois,United States", hl="en", gl="us")
+    run_test("get_google_news_search", get_google_news_search, q="technology news", tbm="nws", hl="en", gl="us")
+    run_test("get_google_maps_search", get_google_maps_search, q="Coffee", ll="@40.7455096,-74.0083012,14z")
+    run_test("get_google_maps_place", get_google_maps_place, place_id="ChIJ9Sto4ahZwokRXpWiQYiOOOo")
+    run_test("get_google_jobs_search", get_google_jobs_search, q="software engineer", location="New York,NY", hl="en", gl="us")
+    run_test("get_google_shopping_search", get_google_shopping_search, q="coffee mug", gl="us", hl="en")
+    run_test("get_walmart_basic_search", get_walmart_basic_search, query="coffee maker", page=1)
+    run_test("get_google_trends_interest_over_time", get_google_trends_interest_over_time, q="coffee", date="today 12-m", geo="US")
+    run_test("get_google_trends_compared_breakdown", get_google_trends_compared_breakdown, q="coffee,tea", data_type="GEO_MAP", geo="US", date="today 3-m")
+    run_test("get_google_trends_interest_by_region", get_google_trends_interest_by_region, q="chocolate", data_type="GEO_MAP_0", geo="GB", region="CITY", date="today 5-y")
+    run_test("get_google_local_basic_search", get_google_local_basic_search, q="coffee shops", location="New York,NY", hl="en", gl="us")
+    run_test("get_google_finance_basic_search", get_google_finance_basic_search, q="NASDAQ:GOOGL", hl="en")
+    run_test("get_google_finance_currency_exchange", get_google_finance_currency_exchange, q="USD/EUR", hl="en")
+    run_test("get_google_events_basic_search", get_google_events_basic_search, q="Events in Austin TX", hl="en", gl="us", location="Austin,Texas,United States")
+    run_test("get_google_lens_basic_search", get_google_lens_basic_search, url="https://i.imgur.com/HBrB8p0.png", hl="en", country="us")
+    run_test("get_google_play_query_search", get_google_play_query_search, q="weather apps", hl="en", gl="us")
+    run_test("get_google_reverse_image_search", get_google_reverse_image_search, image_url="https://i.imgur.com/5bGzZi7.jpg", hl="en", gl="us", google_domain="google.com")
+    run_test("get_google_videos_basic_search", get_google_videos_basic_search, q="funny cats", hl="en", gl="us")
+    run_test("get_youtube_basic_search", get_youtube_basic_search, search_query="star wars", hl="en", gl="us")
+
 
     logger.info(f"Tests completed. Passed: {tests_passed}, Failed: {tests_failed}")
