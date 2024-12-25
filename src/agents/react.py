@@ -47,7 +47,7 @@ from src.utils.io import read_file
 from pydantic import BaseModel
 from typing import Callable, Optional, Any 
 from typing import Union, List, Dict
-from enum import Enum, auto
+from enum import Enum, auto 
 import json
 
 Observation = Union[str, Exception]

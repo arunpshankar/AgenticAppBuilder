@@ -335,14 +335,18 @@ def run():
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         .reasoning-title {
-            font-size: 1.8rem;
-            background: linear-gradient(120deg, #3498db, #2ecc71);
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            font-size: 4rem;
+            font-weight: 700;
             text-align: left;
-            margin: 40px 0 20px 0;
+            margin-bottom: 10px;
             font-family: 'Righteous', cursive;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: gradient 5s ease infinite;
+            background-size: 300% 300%;
         }
         </style>
         """,
