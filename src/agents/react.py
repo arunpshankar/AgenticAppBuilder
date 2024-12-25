@@ -45,7 +45,7 @@ from src.tools.registry import get_lyrics
 from src.config.logging import logger
 from src.utils.io import read_file
 from pydantic import BaseModel
-from typing import Callable
+from typing import Callable, Optional, Any 
 from typing import Union, List, Dict
 from enum import Enum, auto
 import json
@@ -114,6 +114,12 @@ class Message(BaseModel):
     role: str
     content: str
 
+class ActionState(BaseModel):
+    tool_name: str
+    input: str
+    result: Optional[Any] = None
+    status: str = "pending"  # pending, completed, failed
+
 class Agent:
     def __init__(self, model: str, max_iterations: int) -> None:
         self.model = model
@@ -124,6 +130,28 @@ class Agent:
         self.current_iteration = 0
         self.template = self.load_template()
         self.client = initialize_genai_client()
+        self.action_history: List[ActionState] = []  # Track action states
+        self.last_action_result: Optional[Any] = None  # Store last action result
+
+    def get_last_action_result(self) -> Optional[Any]:
+        """Get the result of the last executed action."""
+        if self.action_history:
+            return self.action_history[-1].result
+        return None
+
+    def add_action_state(self, tool_name: str, input_query: str) -> None:
+        """Add a new action state to history."""
+        self.action_history.append(
+            ActionState(tool_name=tool_name, input=input_query)
+        )
+
+    def update_last_action_state(self, result: Any, status: str) -> None:
+        """Update the state of the last action."""
+        if self.action_history:
+            last_action = self.action_history[-1]
+            last_action.result = result
+            last_action.status = status
+            self.last_action_result = result
 
     def load_template(self) -> str:
         return read_file(PROMPT_TEMPLATE_PATH)
@@ -132,92 +160,105 @@ class Agent:
         self.tools[name] = Tool(name, func)
 
     def trace(self, role: str, content: str) -> None:
-        # Log to memory
         if role != "system":
             self.messages.append(Message(role=role, content=content))
 
     def get_history(self) -> str:
-        return "\n".join(f"{m.role}: {m.content}" for m in self.messages)
+        # Include action results in history
+        history = []
+        for msg in self.messages:
+            history.append(f"{msg.role}: {msg.content}")
+        if self.last_action_result:
+            history.append(f"Last action result: {json.dumps(self.last_action_result, indent=2)}")
+        return "\n".join(history)
 
     def ask_gemini(self, prompt: str) -> dict:
-        response = generate_content(self.client, self.model, prompt)
-        if response:
-            response = str(response.text)
-        else:
-            response = 'No response from Gemini'
+        try:
+            response = generate_content(self.client, self.model, prompt)
+            if response:
+                response = str(response.text)
+            else:
+                return {"error": "No response from Gemini"}
 
-        cleaned_response = response.strip().strip('`').strip()
-        if cleaned_response.startswith('json'):
-            cleaned_response = cleaned_response[4:].strip()
-        parsed_response = json.loads(cleaned_response)
-        return parsed_response
+            cleaned_response = response.strip().strip('`').strip()
+            if cleaned_response.startswith('json'):
+                cleaned_response = cleaned_response[4:].strip()
+            return json.loads(cleaned_response)
+        except Exception as e:
+            logger.error(f"Error in ask_gemini: {e}")
+            return {"error": str(e)}
 
     def think(self):
-        # Start new iteration
+        # Check max iterations
         self.current_iteration += 1
         if self.current_iteration > self.max_iterations:
             self.trace("assistant",
-                       "I'm sorry, but I couldn't find a satisfactory answer within the allowed number of iterations.")
-            return None  # indicates done
+                      "I couldn't find a satisfactory answer within the allowed iterations.")
+            return None
 
+        # Include last action result in prompt context
+        last_result = self.get_last_action_result()
         prompt = self.template.format(
             query=self.query,
             history=self.get_history(),
-            tools=', '.join([str(t.name) for t in self.tools.values()])
+            tools=', '.join([str(t.name) for t in self.tools.values()]),
+            last_result=json.dumps(last_result) if last_result else "None"
         )
 
-        # Get the LLM response
+        # Get LLM response
         response = self.ask_gemini(prompt)
+        if "error" in response:
+            self.trace("assistant", f"Error in thinking: {response['error']}")
+            return None
+
         self.trace("assistant", f"Thought: {response}")
         return response
 
     def decide_and_act(self, response: dict):
-        """
-        Processes the agent's JSON response:
-          {
-            "action": {
-               "name": "...",
-               "input": "..."
-            }
-          }
-          or
-          {
-            "answer": "final answer text..."
-          }
-        """
         try:
             if "action" in response:
                 action = response["action"]
                 name_str = action["name"].upper()
+                
                 if name_str == "NONE":
-                    # Means no tool usage, let's continue to next iteration to produce final
                     return None
+                
+                tool_name = Name[name_str]
+                self.trace("assistant", f"Action: Using {tool_name} tool")
+                
+                # Record action state before execution
+                query_input = action.get("input", self.query)
+                self.add_action_state(name_str, query_input)
+                
+                # Execute tool
+                result = self.tools[tool_name].use(query_input)
+                
+                # Update action state with result
+                if isinstance(result, Exception):
+                    self.update_last_action_state(str(result), "failed")
+                    observation = f"Error using {tool_name}: {result}"
                 else:
-                    tool_name = Name[name_str]
-                    self.trace("assistant", f"Action: Using {tool_name} tool")
-                    query_input = action.get("input", self.query)
-                    result = self.tools[tool_name].use(query_input)
-                    # system observation
+                    self.update_last_action_state(result, "completed")
                     observation = f"Observation from {tool_name}: {result}"
-                    self.trace("system", observation)
-                    return None  # means keep going
+                
+                self.trace("system", observation)
+                return None
+            
             elif "answer" in response:
-                # We got a final answer
                 final = response["answer"]
                 self.trace("assistant", f"Final Answer: {final}")
                 return final
+            
             else:
                 raise ValueError("Unrecognized JSON structure")
+                
         except Exception as e:
             logger.error(f"Error in decide_and_act: {e}")
-            self.trace("assistant", "I encountered an error. Let me try again.")
+            self.trace("assistant", f"I encountered an error: {str(e)}. Let me try again.")
             return None
 
     def run_iter(self, query: str):
-        """
-        This is a generator that yields data *only for the current iteration* 
-        so we can display them in a separate panel in Streamlit.
-        """
+        """Generator that yields data for current iteration."""
         self.query = query
         self.trace("user", query)
 
@@ -226,21 +267,19 @@ class Agent:
         while final_answer is None and self.current_iteration < self.max_iterations:
             response = self.think()
             if response is None:
-                # means agent gave up or max iteration reached
                 yield {
                     "iteration": self.current_iteration,
                     "messages": [],
                     "done": True,
                 }
                 break
-                
-            # Extract the messages generated only this iteration
+            
+            # Extract messages from this iteration
             iteration_messages = []
-            start_index = len(self.messages) - 1  # after we appended the "Thought"
+            start_index = len(self.messages) - 1
             final_answer = self.decide_and_act(response)
             end_index = len(self.messages)
 
-            # So new messages from this iteration are:
             iteration_messages = self.messages[start_index:end_index]
 
             yield {
@@ -254,7 +293,6 @@ class Agent:
             "messages": [],
             "done": True,
         }
-
 
 def build_agent(max_iterations: int) -> Agent:
     """
@@ -305,13 +343,10 @@ def build_agent(max_iterations: int) -> Agent:
     agent.register_tool(Name.GOOGLE_FINANCE_SEARCH, get_google_finance_basic_search)
     agent.register_tool(Name.GOOGLE_FINANCE_CURRENCY_EXCHANGE, get_google_finance_currency_exchange)
     agent.register_tool(Name.GOOGLE_LOCATION_SPECIFIC_SEARCH, get_google_location_specific_search)
-
+    
     return agent
 
 def run_react_agent(query: str, max_iterations: int):
-    """
-    Returns a generator, which yields iteration data after each step.
-    (This replaces the old run() that returned a single final answer.)
-    """
+    """Returns a generator yielding iteration data."""
     agent = build_agent(max_iterations=max_iterations)
     return agent.run_iter(query)
