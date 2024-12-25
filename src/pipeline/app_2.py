@@ -9,7 +9,6 @@ from src.agents.react import run_react_agent
 from src.config.setup import GOOGLE_ICON_PATH
 from src.config.logging import logger
 
-# Utility Functions remain the same
 def linkify_urls(text: str) -> str:
     url_pattern = re.compile(r"(http[s]?://\S+)")
     return url_pattern.sub(
@@ -49,7 +48,7 @@ def parse_and_format_json_or_dict(content: str) -> str:
 
     return linkify_urls(content)
 
-def display_message(role: str, content: str, iteration_count: int):
+def display_message(role: str, content: str):
     markers = ["Thought:", "Action:", "Final Answer:", "Error:"]
     blocks = []
     
@@ -101,28 +100,23 @@ def display_message(role: str, content: str, iteration_count: int):
 
     def parse_and_clean(block_type, text):
         if block_type == "thought":
-            # Handle multiple JSON objects in the response
             json_objects = re.findall(r'\{[^{}]*\}', text)
             
             for json_str in json_objects:
                 try:
-                    # Clean up Python None -> JSON null
                     json_str = json_str.replace(": None", ": null")
                     json_str = json_str.replace("'null'", "null")
                     json_str = json_str.replace('"None"', "null")
                     
                     data = json.loads(json_str)
                     
-                    # First check for 'answer' field
                     if 'answer' in data:
                         return str(data['answer'])
-                    # Then check for 'thought' field
                     elif 'thought' in data:
                         return str(data['thought'])
                 except json.JSONDecodeError:
                     continue
             
-            # If JSON parsing fails, try Python literal eval
             try:
                 data = ast.literal_eval(text)
                 if isinstance(data, dict):
@@ -133,7 +127,6 @@ def display_message(role: str, content: str, iteration_count: int):
             except:
                 pass
 
-            # If all parsing fails, handle as markdown
             text = text.split('\n* **action**:')[0]
             text = re.sub(r'^\*\*thought\*\*:\s*', '', text, flags=re.IGNORECASE)
             return text.strip()
@@ -152,56 +145,65 @@ def display_message(role: str, content: str, iteration_count: int):
         cleaned_html = parse_and_clean(block_type, raw_text)
         
         if block_type == "thought" and role == "assistant":
-            with st.expander(f"Thought Process (Iteration {iteration_count})", expanded=False):
-                thought_content = cleaned_html
-                if isinstance(thought_content, str):
-                    thought_content = thought_content.strip("'\"")  # Remove any quotes
-                st.markdown(
-                    f"""
-                    <div style='
-                        background-color:#E6EEFF; 
-                        border-radius:8px; 
-                        margin:10px 0; 
-                        padding:15px; 
-                        font-size:15px;
-                        line-height:1.5;
-                        color:#2C3E50;'
-                    >
-                        {thought_content}
+            st.markdown(
+                f"""
+                <div style='
+                    background-color:#E6EEFF;
+                    border-radius:8px;
+                    margin:10px 0;
+                    padding:15px;
+                    font-size:15px;
+                    line-height:1.5;
+                    color:#2C3E50;
+                    border-left:4px solid #3498db;
+                '>
+                    <strong style='color:#3498db;'>Thought:</strong>
+                    <div style='margin-top:8px;'>
+                        {cleaned_html}
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
         elif block_type == "action" and role == "assistant":
-            with st.expander(f"Action (Iteration {iteration_count})", expanded=False):
-                st.markdown(
-                    f"""
-                    <div style='
-                        background-color:#F0E6FF; 
-                        border-radius:8px; 
-                        margin:10px 0; 
-                        padding:10px; 
-                        border-left:3px solid #555; 
-                        font-size:14px;'
-                    >
-                        <strong style='color:#6C3483;'>Action:</strong> {cleaned_html}
+            st.markdown(
+                f"""
+                <div style='
+                    background-color:#F0E6FF;
+                    border-radius:8px;
+                    margin:10px 0;
+                    padding:15px;
+                    font-size:15px;
+                    line-height:1.5;
+                    color:#2C3E50;
+                    border-left:4px solid #6C3483;
+                '>
+                    <strong style='color:#6C3483;'>Action:</strong>
+                    <div style='margin-top:8px;'>
+                        {cleaned_html}
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
         elif block_type == "final" and role == "assistant":
             st.markdown(
                 f"""
                 <div style='
-                    background-color:#DFFFE3; 
-                    border-radius:8px; 
-                    margin:16px 0; 
-                    padding:12px; 
-                    font-size:15px;'
-                >
-                    <strong style='color:#186A3B;'>Final Answer:</strong> {cleaned_html}
+                    background-color:#DFFFE3;
+                    border-radius:8px;
+                    margin:16px 0;
+                    padding:15px;
+                    font-size:15px;
+                    line-height:1.5;
+                    border-left:4px solid #186A3B;
+                '>
+                    <strong style='color:#186A3B;'>Final Answer:</strong>
+                    <div style='margin-top:8px;'>
+                        {cleaned_html}
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -211,14 +213,18 @@ def display_message(role: str, content: str, iteration_count: int):
             st.markdown(
                 f"""
                 <div style='
-                    background-color:#FFCCCC; 
-                    border-radius:8px; 
-                    margin:10px 0; 
-                    padding:10px; 
-                    border:2px solid #AA0000; 
-                    font-size:14px;'
-                >
-                    <strong style='color:#AA0000;'>Error:</strong> {cleaned_html}
+                    background-color:#FFCCCC;
+                    border-radius:8px;
+                    margin:10px 0;
+                    padding:15px;
+                    font-size:15px;
+                    line-height:1.5;
+                    border:2px solid #AA0000;
+                '>
+                    <strong style='color:#AA0000;'>Error:</strong>
+                    <div style='margin-top:8px;'>
+                        {cleaned_html}
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -228,13 +234,18 @@ def display_message(role: str, content: str, iteration_count: int):
             st.markdown(
                 f"""
                 <div style='
-                    background-color:#FFFFFF; 
-                    border-radius:8px; 
-                    margin:10px 0; 
-                    padding:10px; 
-                    font-size:14px;'
-                >
-                    <strong>{role.capitalize()}:</strong> {cleaned_html}
+                    background-color:#FFFFFF;
+                    border-radius:8px;
+                    margin:10px 0;
+                    padding:15px;
+                    font-size:15px;
+                    line-height:1.5;
+                    border-left:4px solid #95a5a6;
+                '>
+                    <strong>{role.capitalize()}:</strong>
+                    <div style='margin-top:8px;'>
+                        {cleaned_html}
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -287,10 +298,51 @@ def run():
             background-clip: text;
             color: transparent;
         }
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .search-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .stTextInput input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .stTextInput input:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
+            background: white;
+        }
+        .stButton button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #2196F3, #4CAF50);
+            border: none;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stButton button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .reasoning-title {
+            font-size: 1.8rem;
+            background: linear-gradient(120deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: left;
+            margin: 40px 0 20px 0;
+            font-family: 'Righteous', cursive;
         }
         </style>
         """,
@@ -320,24 +372,22 @@ def run():
         placeholder="Ask anything...",
         help="Type your question here!"
     )
-    search_clicked = st.button(
-        "Explore",
-        key="search_button",
-        type="primary",
-        help="Ask the Gemini React Agent"
-    )
+
+    col1, col2, col3 = st.columns([6,2,6])
+    with col2:
+        search_clicked = st.button(
+            "Explore",
+            key="search_button",
+            type="primary",
+            help="Ask the Gemini React Agent"
+        )
 
     if search_clicked and user_query.strip():
         st.markdown(
             """
-            <h2 style='
-                color: #9b59b6; 
-                margin-top: 40px;
-                margin-bottom: 5px;
-            '>
+            <h2 class='reasoning-title'>
                 Reasoning Trace
             </h2>
-            <hr style='border:none;border-top:1px solid #eee;margin-bottom: 20px;' />
             """,
             unsafe_allow_html=True
         )
@@ -347,8 +397,29 @@ def run():
         for iteration_count, data in enumerate(
             run_react_agent(user_query, max_iterations), start=1
         ):
+            # Display iteration header once before processing messages
+            st.markdown(
+                f"""
+                <div style='
+                    margin:24px 0 12px 0;
+                '>
+                    <span style='
+                        color:#333;
+                        font-size:14px;
+                        font-weight:500;
+                        text-transform:uppercase;
+                        letter-spacing:0.5px;
+                    '>
+                        Iteration {iteration_count}
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Process all messages for this iteration
             for msg in data["messages"]:
-                display_message(msg.role, msg.content, iteration_count)
+                display_message(msg.role, msg.content)
 
                 if "Final Answer:" in msg.content:
                     final_answer_collected = True
@@ -360,14 +431,17 @@ def run():
             st.markdown(
                 """
                 <div style='
-                    background-color:#DFFFE3; 
-                    border-radius:8px; 
-                    margin:16px 0; 
-                    padding:12px; 
-                    font-size:15px;'
-                >
+                    background-color:#DFFFE3;
+                    border-radius:8px;
+                    margin:16px 0;
+                    padding:12px;
+                    font-size:15px;
+                    border-left:4px solid #186A3B;
+                '>
                     <strong style='color:#186A3B;'>Final Answer:</strong>
-                    (No explicit final answer was provided by the agent.)
+                    <div style='margin-top:8px;'>
+                        (No explicit final answer was provided by the agent.)
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
