@@ -1,19 +1,118 @@
-import streamlit as st
-import json
-import re
-import ast
-import os
-import requests
 from src.agents.react import run_react_agent
 from src.config.setup import GOOGLE_ICON_PATH
 from src.config.logging import logger
+from typing import Optional
+from typing import Tuple
+from typing import List 
+import streamlit as st
+import requests
+import ast
+import os
+import re
 from pathlib import Path
-from typing import Optional, Tuple, List
 import logging
+from src.llm.gemini_text import generate_content
 
+from src.config.client import initialize_genai_client
 logger = logging.getLogger(__name__)
 
+def extract_image_urls(text: str) -> list:
+    """
+    Enhanced function to extract both SERP API and regular image URLs from text.
+    
+    Matches:
+    1. SerpAPI URLs: https://serpapi.com/searches/[ID]/images/[ID].[extension]
+    2. Google encrypted image URLs: https://encrypted-tbn0.gstatic.com/images?q=[params]
+    3. Regular image URLs: http(s)://domain/path/image.(jpg|jpeg|png|gif|webp)
+    """
+    # Pattern for serpapi image URLs
+    serpapi_pattern = r'https:\/\/serpapi\.com\/searches\/[a-zA-Z0-9]+\/images\/[a-zA-Z0-9]+\.(?:jpeg|png|webp|jpg)'
+    
+    # Pattern for encrypted Google image URLs
+    google_image_pattern = r'https:\/\/encrypted-tbn0\.gstatic\.com\/images\?q=[^"\s]+'
+    
+    # Pattern for regular image URLs
+    regular_image_pattern = r'https?:\/\/(?!serpapi\.com|encrypted-tbn0\.gstatic\.com)[^\s<>"]+?\.(?:jpg|jpeg|png|gif|webp)(?:["\s]|$)'
+    
+    # Combine all patterns
+    combined_pattern = f'({serpapi_pattern}|{google_image_pattern}|{regular_image_pattern})'
+    
+    # Find all matches
+    matches = re.finditer(combined_pattern, text, re.IGNORECASE)
+    
+    # Extract unique URLs
+    urls = []
+    seen = set()
+    
+    for match in matches:
+        url = match.group(0).strip('"\'[]() \t\n\r')  # Clean up URL
+        if url not in seen:
+            seen.add(url)
+            urls.append(url)
+            
+    return urls
+
+
+
+import re
+
+def extract_and_clean_text(text: str) -> tuple[list[str], str]:
+    """
+    Extracts image URLs and cleans up the text by removing image references,
+    including URLs with "URL:", "url:", and hyperlinks. Removes floating or broken brackets,
+    HTTP/HTTPS URLs, patterns like [pattern] or (pattern), and adds breaklines for readability.
+    """
+    def extract_image_urls(text):
+        # Define a regex pattern to extract valid URLs
+        image_url_pattern = r'https?://[^\s\]\)]+'
+        return re.findall(image_url_pattern, text)
+
+    # Extract URLs using helper function
+    urls = extract_image_urls(text)
+
+    # Remove duplicates while maintaining order
+    seen = set()
+    urls = [url for url in urls if not (url in seen or seen.add(url))]
+    
+    # Clean the text
+    processed_text = text
+    
+    # Remove patterns like [pattern] or (pattern)
+    processed_text = re.sub(r'\[(.*?)\]', r'\1', processed_text)  # Remove square brackets
+    processed_text = re.sub(r'\((.*?)\)', r'\1', processed_text)  # Remove parentheses
+    
+    # Remove broken or floating brackets
+    processed_text = re.sub(r'\[', '', processed_text)  # Remove stray '['
+    processed_text = re.sub(r'\]', '', processed_text)  # Remove stray ']'
+    processed_text = re.sub(r'\(', '', processed_text)  # Remove stray '('
+    processed_text = re.sub(r'\)', '', processed_text)  # Remove stray ')'
+    
+    # Remove HTTP/HTTPS URLs from the text
+    processed_text = re.sub(r'https?://[^\s\]\)]+', '', processed_text)
+    
+    # Remove generic image references
+    processed_text = re.sub(r'\[Image[^\]]*?\]', '', processed_text)
+    
+    # Remove URLs with "URL:", "url:" prefixes
+    processed_text = re.sub(r'(URL|url):\s*\S+', '', processed_text)
+    
+    # Remove hyperlinks
+    processed_text = re.sub(r'<a\s+href=[\'"]?([^\'" >]+)[\'"]?>.+?</a>', '', processed_text)
+    
+    # Add breaklines for readability
+    processed_text = re.sub(r'(?<=[.!?]) ', '\n', processed_text)  # Add newline after end of sentences
+    processed_text = re.sub(r'(?<=:)', '\n', processed_text)       # Add newline after colon
+
+    # Clean up extra whitespace
+    processed_text = re.sub(r'\s+', ' ', processed_text).strip()
+
+    return urls, processed_text
+
+
+
+
 def validate_image_url(url: str) -> bool:
+    """Validates if a URL points to an accessible image."""
     try:
         response = requests.head(url, timeout=5)
         return (response.status_code == 200 and 
@@ -22,6 +121,7 @@ def validate_image_url(url: str) -> bool:
         return False
 
 def render_image(url: str) -> str:
+    """Renders an image with fallback handling."""
     is_valid = validate_image_url(url)
     if is_valid:
         return f"""<div style="margin:10px 0;">
@@ -36,11 +136,8 @@ def render_image(url: str) -> str:
         </div>
     """
 
-def extract_image_urls(text: str) -> list:
-    url_pattern = re.compile(r'https?://[^\s<>"]+?(?:jpg|jpeg|png|gif)(?:["\s]|$)', re.IGNORECASE)
-    return url_pattern.findall(text)
-
 def linkify_urls(text: str) -> str:
+    """Converts URLs in text to clickable links."""
     url_pattern = re.compile(r"(http[s]?://\S+)")
     return url_pattern.sub(
         r"<a href='\g<0>' target='_blank' style='color: #1f77b4;'>\g<0></a>", 
@@ -48,6 +145,7 @@ def linkify_urls(text: str) -> str:
     )
     
 def download_image(url: str) -> Optional[str]:
+    """Downloads an image from a URL and saves it locally."""
     try:
         base_dir = Path('tmp/images')
         base_dir.mkdir(parents=True, exist_ok=True)
@@ -68,6 +166,7 @@ def download_image(url: str) -> Optional[str]:
         return None
 
 def parse_thought_action(text: str) -> tuple[str, str]:
+    """Parses thought and action from agent response."""
     try:
         clean_text = text.replace("**Thought:**", "").replace("**Action:**", "").strip()
         data = ast.literal_eval(clean_text)
@@ -84,6 +183,7 @@ def parse_thought_action(text: str) -> tuple[str, str]:
     return text, text
 
 def display_message(role: str, content: str, final_answer_container=None):
+    """Displays a message with appropriate formatting and handles image extraction."""
     if not isinstance(content, str):
         try:
             content = str(content)
@@ -141,73 +241,71 @@ def display_message(role: str, content: str, final_answer_container=None):
             answer_container = final_answer_container.container()
             image_container = final_answer_container.container()
             
-            # More permissive regex for SerpApi URLs - matches any serpapi.com/searches/ URL
-            serpapi_urls = re.findall(r'https://serpapi\.com/searches/[^\s<>"]+', text)
+            # Extract URLs and clean text using our enhanced function
+            all_urls, processed_text = extract_and_clean_text(text)
             
-            # More permissive regex for regular image URLs
-            regular_urls = re.findall(r'https?://(?!serpapi\.com)[^\s<>"]+(?:["\s]|$)', text)
-            
-            all_urls = serpapi_urls + regular_urls
-            processed_text = text
-
-            # Clean up the URLs in the text
-            for url in all_urls:
-                # Remove trailing quotes or whitespace that might have been captured
-                clean_url = url.rstrip('"\'\\s ')
-                processed_text = processed_text.replace(f'[{clean_url}]', '')
-                processed_text = re.sub(r'\[Image.*?\]', '', processed_text)
-                
-                # Update the URL in the list with the cleaned version
-                all_urls[all_urls.index(url)] = clean_url
-
             # Process markdown formatting
             processed_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', processed_text)
             
+            print('VVVVV')
+            print(all_urls)
+            print(processed_text)
+            
+            gemini_client = initialize_genai_client()
+
+            MODEL_ID: str = "gemini-2.0-flash-exp"
+            prompt: str = f"""
+Clean and format it to nice markdown easy to read to the user - if there are images - say .. are shown below. 
+Remove broken text and noise and make it professional. no fluff - no placeholders for images - 
+no urls - no explanation of changes. 
+be crisp and be aligned to the query\n\n{processed_text}\n strictly no placeholder for images like eg., Image 2 displayed below or [image] or [url] etc. """
+
+            # Generate content
+            response = generate_content(gemini_client, MODEL_ID, prompt).text
+                
             # Display final answer first
             answer_container.markdown(
                 f"""<div style='background-color:#FFFFFF; border-radius:12px; margin:24px 0; padding:30px; font-size:16px; line-height:1.8; color:#333; box-shadow:0 4px 12px rgba(0,0,0,0.05); border:1px solid #E0E0E0'>
                     <h3 style='color:#186A3B; margin:0 0 20px 0; font-size:24px; font-weight:600'>Final Answer</h3>
-                    {processed_text}
-                </div>""", 
+                    {response}""",
                 unsafe_allow_html=True
             )
 
-            # Then handle and display the images
+            # Handle and display images in a uniform grid
             if all_urls:
-                image_container.markdown("""
-                    <div style='margin-top: 24px; padding: 16px; background: #f8f9fa; border-radius: 12px;'>
-                        <h4 style='margin:0 0 16px 0; color: #333;'>Retrieved Images</h4>
-                        <div style='display: flex; flex-wrap: wrap; gap: 16px;' class='image-grid'>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+                # Create columns for the image grid - adjust number of columns as needed
+                cols = image_container.columns(5)
                 
-                image_cols = image_container.columns(3)
-                image_count = 0
-
-                for url in all_urls:
-                    local_path = download_image(url)
-                    if local_path:
-                        try:
-                            img = Path(local_path)
-                            if img.exists():
-                                col_idx = image_count % 3
-                                with image_cols[col_idx]:
-                                    st.image(
-                                        str(img), 
-                                        use_container_width=True,
-                                        output_format="JPEG",
-                                        caption=f"Image {image_count + 1}"
-                                    )
-                                    st.markdown(f"**Original URL:** {url}")
-                                    st.markdown(f"**Local path:** `{local_path}`")
-                                image_count += 1
-                            else:
-                                logger.warning(f"Image file not found: {local_path}")
-                        except Exception as e:
-                            logger.error(f"Error displaying image {local_path}: {str(e)}")
-                            continue
-            continue
+                # Calculate image dimensions for uniform tiles
+                image_width = 500  # Fixed width for all images
+                image_height = 500  # Fixed height for all images
+                
+                # Iterate through URLs and display in grid
+                for idx, url in enumerate(all_urls):
+                    col_idx = idx % 6  # Determine which column to place the image
+                    # Create a card-like container for each image
+                    with cols[col_idx]:
+                        st.markdown(
+            f"""
+            <div style="
+                width: 100%; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center;  /* Center image vertically */
+                overflow: hidden;   /* Hide any content that overflows */
+                height: {image_height}px;  /* Set a fixed height for the container */
+            "> 
+                <img src="{url}" style="
+                    width: {image_width}px; 
+                    height: {image_height}px; 
+                    object-fit: cover; 
+                "> 
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+                    
+            
 
         # Style mapping for different block types
         style_map = {
@@ -353,7 +451,7 @@ def run():
         help="Type your question here!"
     )
 
-    col1, col2, col3 = st.columns([6,2,6])
+    _, col2, _ = st.columns([6,2,6])
     with col2:
         search_clicked = st.button(
             "Explore",
