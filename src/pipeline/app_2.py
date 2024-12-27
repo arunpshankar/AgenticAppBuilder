@@ -1,8 +1,8 @@
 from src.config.client import initialize_genai_client
 from src.llm.gemini_text import generate_content
 from src.config.setup import GOOGLE_ICON_PATH
-from src.agents.react import run_react_agent
 from src.utils.template import TemplateLoader
+from src.agents.react import run_react_agent
 from src.config.logging import logger
 from typing import Optional
 from typing import Tuple
@@ -16,9 +16,9 @@ import ast
 import os
 import re
 
+
 # Initialize template loader
 template_loader = TemplateLoader()
-
 
 def extract_image_urls(text: str) -> list:
     """
@@ -394,12 +394,16 @@ def run():
                 os.makedirs('tmp/uploads', exist_ok=True)
             
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            safe_filename = "".join(c for c in uploaded_file.name if c.isalnum() or c in ('-', '_')).lower()
-            unique_filename = f"{timestamp}_{safe_filename}"
+            unique_id = abs(hash(uploaded_file.name))
+            _, ext = os.path.splitext(uploaded_file.name)
+            unique_filename = f"{timestamp}_{unique_id}{ext}"
             image_path = os.path.join('tmp/uploads', unique_filename)
-            
+                        
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getbuffer())
+            
+            # Log image upload
+            logger.info(f"Image uploaded - Filename: {uploaded_file.name}, Saved as: {image_path}")
             
             # Display thumbnail and remove button
             st.markdown(
@@ -434,11 +438,15 @@ def run():
                 "text": user_query,
                 "image_path": image_path
             }
+            # Log multimodal input
+            logger.info(f"Multimodal input received - Query: {user_query}, Image: {image_path}")
         else:
             query_data = {
                 "text": user_query,
                 "image_path": None
             }
+            # Log text-only input
+            logger.info(f"Text-only input received - Query: {user_query}")
 
         st.markdown(
             """

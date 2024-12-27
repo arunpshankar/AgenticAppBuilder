@@ -5,11 +5,9 @@ from src.tools.registry import get_google_finance_currency_exchange
 from src.tools.registry import get_google_location_specific_search
 from src.tools.registry import get_google_image_search_results
 from src.tools.registry import get_google_finance_basic_search
-from src.tools.registry import get_google_reverse_image_search
 from src.tools.registry import get_google_events_basic_search
 from src.tools.registry import get_google_videos_basic_search
 from src.tools.registry import get_google_local_basic_search
-from src.tools.registry import get_google_lens_basic_search
 from src.tools.registry import get_google_play_query_search
 from src.tools.registry import get_random_dog_breed_image
 from src.tools.registry import get_google_shopping_search
@@ -44,7 +42,10 @@ from src.tools.registry import get_zip_info
 from src.tools.registry import get_lyrics
 from src.config.logging import logger
 from src.utils.io import read_file
+
+
 from pydantic import BaseModel, field_validator
+
 from typing import Callable, Optional, Any 
 from typing import Union, List, Dict
 from enum import Enum, auto 
@@ -351,16 +352,17 @@ def build_agent(max_iterations: int) -> Agent:
     agent.register_tool(Name.GOOGLE_TRENDS_INTEREST, get_google_trends_interest_over_time)
     agent.register_tool(Name.GOOGLE_TRENDS_BREAKDOWN, get_google_trends_compared_breakdown)
     agent.register_tool(Name.GOOGLE_TRENDS_REGION, get_google_trends_interest_by_region)
-    agent.register_tool(Name.GOOGLE_LENS_SEARCH, get_google_lens_basic_search)
+    
     agent.register_tool(Name.YOUTUBE_SEARCH, get_youtube_basic_search)
     agent.register_tool(Name.GOOGLE_PLAY_SEARCH, get_google_play_query_search)
     agent.register_tool(Name.GOOGLE_LOCAL_SEARCH, get_google_local_basic_search)
     agent.register_tool(Name.GOOGLE_VIDEOS_SEARCH, get_google_videos_basic_search)
     agent.register_tool(Name.GOOGLE_EVENTS_SEARCH, get_google_events_basic_search)
-    agent.register_tool(Name.GOOGLE_REVERSE_IMAGE_SEARCH, get_google_reverse_image_search)
+    
     agent.register_tool(Name.GOOGLE_FINANCE_SEARCH, get_google_finance_basic_search)
     agent.register_tool(Name.GOOGLE_FINANCE_CURRENCY_EXCHANGE, get_google_finance_currency_exchange)
     agent.register_tool(Name.GOOGLE_LOCATION_SPECIFIC_SEARCH, get_google_location_specific_search)
+    agent.register_tool(Name.GEMINI_MULTIMODAL, generate_content_multimodal)
     
     return agent
 

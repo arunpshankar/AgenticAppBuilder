@@ -4,9 +4,12 @@ from typing import Optional
 from typing import Dict 
 from typing import List 
 from typing import Any 
+from PIL import Image
 import wikipediaapi
 import requests
 import json
+
+from src.llm.gemini_text_image import generate_content_multimodal
 
 
 def get_wiki_search_results(query: str) -> Optional[str]:
@@ -981,33 +984,6 @@ def get_google_events_basic_search(q: str, hl: Optional[str] = None, gl: Optiona
         raise
 
 
-def get_google_lens_basic_search(url: str, hl: Optional[str] = None, country: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Retrieve Google Lens results by providing an image URL using SerpApi.
-
-    :param url: URL of the image (required).
-    :param hl: Language for the search (optional).
-    :param country: Country for the search (optional).
-    :return: A dictionary containing Google Lens results.
-    :raises requests.HTTPError: If the request fails.
-    """
-    base_url = "https://serpapi.com/search"
-    params = {"engine": "google_lens", "url": url, "api_key": get_api_key()}
-    if hl:
-        params["hl"] = hl
-    if country:
-        params["country"] = country
-    try:
-        response = requests.get(base_url, params=params)
-        response.raise_for_status()
-        lens_data = response.json()
-        logger.info(f"Retrieved Google Lens results for image URL '{url}': {lens_data}")
-        return lens_data
-    except requests.RequestException as e:
-        logger.error(f"Failed to retrieve Google Lens results for image URL '{url}': {e}")
-        raise
-
-
 def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve app listings from the Google Play Store by search query using SerpApi.
@@ -1034,36 +1010,6 @@ def get_google_play_query_search(q: Optional[str] = None, hl: Optional[str] = No
         return play_data
     except requests.RequestException as e:
         logger.error(f"Failed to retrieve Google Play app listings for query '{q}': {e}")
-        raise
-
-
-def get_google_reverse_image_search(image_url: str, hl: Optional[str] = None, gl: Optional[str] = None, google_domain: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Retrieve Google reverse image search results by providing an image URL using SerpApi.
-
-    :param image_url: URL of the image (required).
-    :param hl: Language for the search (optional).
-    :param gl: Geographic region for the search (optional).
-    :param google_domain: Google domain to use for the search (optional).
-    :return: A dictionary containing reverse image search results.
-    :raises requests.HTTPError: If the request fails.
-    """
-    base_url = "https://serpapi.com/search"
-    params = {"engine": "google_reverse_image", "image_url": image_url, "api_key": get_api_key()}
-    if hl:
-        params["hl"] = hl
-    if gl:
-        params["gl"] = gl
-    if google_domain:
-        params["google_domain"] = google_domain
-    try:
-        response = requests.get(base_url, params=params)
-        response.raise_for_status()
-        reverse_image_data = response.json()
-        logger.info(f"Retrieved reverse image search results for image URL '{image_url}': {reverse_image_data}")
-        return reverse_image_data
-    except requests.RequestException as e:
-        logger.error(f"Failed to retrieve reverse image search results for image URL '{image_url}': {e}")
         raise
 
 
@@ -1118,6 +1064,57 @@ def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Op
         return youtube_data
     except requests.RequestException as e:
         logger.error(f"Failed to retrieve YouTube results for query '{search_query}': {e}")
+        raise
+
+
+def process_image_from_path(file_path: str) -> Image.Image:
+    """
+    Loads and processes an image from a local file path.
+
+    Args:
+        file_path (str): Local file path of the image to process.
+
+    Returns:
+        Image.Image: Processed PIL Image object.
+    """
+    logger.info("Loading image from local file path: %s", file_path)
+    try:
+        img_path = Path(file_path)
+        if not img_path.exists():
+            logger.error("File not found: %s", file_path)
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        image = Image.open(img_path)
+        # image.thumbnail([512, 512])
+        logger.info("Image processed successfully")
+        return image
+    except Exception as e:
+        logger.error("Failed to process image from path: %s", e)
+        raise
+
+def get_multimodal_search(client, model_id: str, image_path: str, prompt: str) -> str:
+    """
+    Generates content based on a given image and text prompt using the model.
+
+    Args:
+        client: Initialized Generative AI client.
+        model_id (str): Model ID for content generation.
+        image (Image.Image): PIL Image object.
+        prompt (str): Text prompt to guide the content generation.
+
+    Returns:
+        str: Generated content text.
+    """
+    logger.info("Starting content generation with the provided image and text prompt")
+    image = process_image_from_path(image_path)
+    try:
+        response = client.models.generate_content(
+            model=model_id,
+            contents=[image, prompt]
+        )
+        return response.text
+    except Exception as e:
+        logger.error("Failed to generate content: %s", e)
         raise
 
 
@@ -1183,9 +1180,7 @@ if __name__ == "__main__":
     run_test("get_google_finance_basic_search", get_google_finance_basic_search, q="NASDAQ:GOOGL", hl="en")
     run_test("get_google_finance_currency_exchange", get_google_finance_currency_exchange, q="USD/EUR", hl="en")
     run_test("get_google_events_basic_search", get_google_events_basic_search, q="Events in Austin TX", hl="en", gl="us", location="Austin,Texas,United States")
-    run_test("get_google_lens_basic_search", get_google_lens_basic_search, url="https://i.imgur.com/HBrB8p0.png", hl="en", country="us")
     run_test("get_google_play_query_search", get_google_play_query_search, q="weather apps", hl="en", gl="us")
-    run_test("get_google_reverse_image_search", get_google_reverse_image_search, image_url="https://i.imgur.com/5bGzZi7.jpg", hl="en", gl="us", google_domain="google.com")
     run_test("get_google_videos_basic_search", get_google_videos_basic_search, q="funny cats", hl="en", gl="us")
     run_test("get_youtube_basic_search", get_youtube_basic_search, search_query="star wars", hl="en", gl="us")
 
