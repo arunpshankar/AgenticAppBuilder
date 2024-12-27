@@ -42,13 +42,15 @@ from src.tools.registry import get_zip_info
 from src.tools.registry import get_lyrics
 from src.config.logging import logger
 from src.utils.io import read_file
-
-
+from src.tools.registry import get_multimodal_reasoning
 from pydantic import BaseModel, field_validator
 
 from typing import Callable, Optional, Any 
 from typing import Union, List, Dict
 from enum import Enum, auto 
+import json
+from pydantic import BaseModel, field_validator, ValidationError
+from typing import Any, Union, Dict
 import json
 
 Observation = Union[str, Exception]
@@ -97,14 +99,15 @@ class Name(Enum):
     GOOGLE_LOCATION_SPECIFIC_SEARCH = auto()
     WALMART_SEARCH = auto()
     YOUTUBE_SEARCH = auto()
+    GEMINI_MULTIMODAL = auto()
     NONE = "none"
 
 class Tool:
-    def __init__(self, name: Name, func: Callable[[str], str]):
+    def __init__(self, name: Name, func: Callable[[Union[str, Dict[str, str]]], str]):
         self.name = name
         self.func = func
 
-    def use(self, query: str) -> Observation:
+    def use(self, query: Union[str, Dict[str, str]]) -> Observation:
         try:
             return self.func(query)
         except Exception as e:
@@ -115,15 +118,26 @@ class Message(BaseModel):
     role: str
     content: str
 
-    @field_validator('content')
+    # Use mode="before" to intercept the raw input before pydantic enforces string type
+    @field_validator('content', mode='before')
     @classmethod
-    def validate_content(cls, v: Any) -> str:
-        """Validate and convert content to string format."""
+    def validate_content(cls, v):
         if isinstance(v, dict):
-            return str(v)
-        elif not isinstance(v, str):
-            return str(v)
-        return v
+            return json.dumps(v)
+        return str(v)
+
+class MultimodalContent(BaseModel):
+    text: str
+    image_path: str
+
+    def to_dict(self) -> Dict[str, str]:
+        return {"text": self.text, "image_path": self.image_path}
+
+def create_message(role: str, content: Union[str, Dict, Any]) -> Message:
+    try:
+        return Message(role=role, content=content)
+    except ValidationError as e:
+        raise ValueError(f"Message creation failed: {str(e)}")
 
 class ActionState(BaseModel):
     tool_name: str
@@ -137,12 +151,19 @@ class Agent:
         self.tools: Dict[Name, Tool] = {}
         self.messages: List[Message] = []
         self.query = ""
+        self.image_path = None 
         self.max_iterations = max_iterations
         self.current_iteration = 0
         self.template = self.load_template()
         self.client = initialize_genai_client()
         self.action_history: List[ActionState] = []
         self.last_action_result: Optional[Any] = None
+
+            # Validate model and max_iterations
+        if not isinstance(model, str):
+            raise ValueError("Model must be a string")
+        if not isinstance(max_iterations, int) or max_iterations <= 0:
+            raise ValueError("max_iterations must be a positive integer")
 
     def get_last_action_result(self) -> Optional[Any]:
         """Get the result of the last executed action."""
@@ -185,15 +206,22 @@ class Agent:
 
     def ask_gemini(self, prompt: str) -> dict:
         try:
-            response = generate_content(self.client, self.model, prompt)
-            if response:
-                response = str(response.text)
+            # Handle multimodal input if image is present
+            if self.image_path:
+                # Use GEMINI_MULTIMODAL tool for image + text queries
+                multimodal_input = {
+                    "text": prompt,
+                    "image_path": self.image_path
+                }
+                response = self.tools[Name.GEMINI_MULTIMODAL].use(multimodal_input)
             else:
-                return {"error": "No response from Gemini"}
+                response = generate_content(self.client, self.model, prompt)
+                response = str(response.text) if response else {"error": "No response from Gemini"}
 
             cleaned_response = response.strip().strip('`').strip()
             if cleaned_response.startswith('json'):
                 cleaned_response = cleaned_response[4:].strip()
+   
             return json.loads(cleaned_response)
         except Exception as e:
             logger.error(f"Error in ask_gemini: {e}")
@@ -211,6 +239,7 @@ class Agent:
         last_result = self.get_last_action_result()
         prompt = self.template.format(
             query=self.query,
+            image_context=self.image_path,
             history=self.get_history(),
             tools=', '.join([str(t.name) for t in self.tools.values()]),
             last_result=json.dumps(last_result) if last_result else "None"
@@ -237,9 +266,22 @@ class Agent:
                 tool_name = Name[name_str]
                 self.trace("assistant", f"Action: Using {tool_name} tool")
                 
+                # Handle multimodal queries
+                if tool_name == Name.GEMINI_MULTIMODAL:
+                    # Ensure input is a dictionary before accessing with get()
+                    action_input = action.get("input", {})
+                    if isinstance(action_input, str):
+                        action_input = {"text": action_input}
+                    
+                    query_input = {
+                        "text": action_input.get("text", self.query),
+                        "image_path": action_input.get("image_path", self.image_path)
+                    }
+                else:
+                    query_input = action.get("input", self.query)
+                
                 # Record action state before execution
-                query_input = action.get("input", self.query)
-                self.add_action_state(name_str, query_input)
+                self.add_action_state(name_str, str(query_input))
                 
                 # Execute tool
                 result = self.tools[tool_name].use(query_input)
@@ -270,18 +312,26 @@ class Agent:
 
     def run_iter(self, query: Dict[str, Any]):
         """Generator that yields data for current iteration."""
+        logger.info(f'Raw Query: {query}')
+        
         # Extract text and image path from query dictionary
         if isinstance(query, dict):
             self.query = query.get('text', '')
             self.image_path = query.get('image_path')
         else:
-            self.query = str(query)  # Convert to string if not a dict
+            self.query = str(query)
             self.image_path = None
+        
+        # Include image path in message trace if present    
+        if self.image_path:
+            query_content = {
+                "text": self.query,
+                "image_path": self.image_path
+            }
+        else:
+            query_content = self.query
             
-        # Convert query to string for message trace
-        query_str = self.query if isinstance(self.query, str) else str(self.query)
-        self.trace("user", query_str)
-
+        self.trace("user", query_content)
         final_answer = None
 
         while final_answer is None and self.current_iteration < self.max_iterations:
@@ -296,6 +346,18 @@ class Agent:
             
             iteration_messages = []
             start_index = len(self.messages) - 1
+            
+            # For multimodal queries, route through GEMINI_MULTIMODAL tool
+            if self.image_path and "action" in response:
+                action = response["action"]
+                if action["name"] != "GEMINI_MULTIMODAL":
+                    action["name"] = "GEMINI_MULTIMODAL"
+                    action["input"] = {
+                        "text": action.get("input", self.query),
+                        "image_path": self.image_path
+                    }
+                    response["action"] = action
+            
             final_answer = self.decide_and_act(response)
             end_index = len(self.messages)
 
@@ -362,7 +424,7 @@ def build_agent(max_iterations: int) -> Agent:
     agent.register_tool(Name.GOOGLE_FINANCE_SEARCH, get_google_finance_basic_search)
     agent.register_tool(Name.GOOGLE_FINANCE_CURRENCY_EXCHANGE, get_google_finance_currency_exchange)
     agent.register_tool(Name.GOOGLE_LOCATION_SPECIFIC_SEARCH, get_google_location_specific_search)
-    agent.register_tool(Name.GEMINI_MULTIMODAL, generate_content_multimodal)
+    agent.register_tool(Name.GEMINI_MULTIMODAL, get_multimodal_reasoning)
     
     return agent
 

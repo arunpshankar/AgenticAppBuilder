@@ -9,6 +9,7 @@ import wikipediaapi
 import requests
 import json
 import os 
+from typing import Union, Dict
 
 
 def get_wiki_search_results(query: str) -> Optional[str]:
@@ -1066,37 +1067,58 @@ def get_youtube_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str]
         raise
 
 
-def get_multimodal_reasoning(q: str, image_path: str) -> str:
+def get_multimodal_reasoning(query: Union[str, Dict[str, str]]) -> str:
     """
     Perform multimodal reasoning on text and image inputs using Gemini model.
-
+    
     Args:
-        q (str): Text query/prompt to guide the reasoning
-        image_path (str): Local file path to the image
-
+        query (Union[str, Dict[str, str]]): Either:
+            - A dictionary containing {"text": str, "image_path": str}
+            - A JSON string containing {"text": str, "image_path": str}
+    
     Returns:
         str: Generated reasoning/response from Gemini model
         
     Raises:
-        ValueError: If image_path is invalid or image cannot be loaded
+        ValueError: If inputs are invalid or image cannot be loaded
         Exception: For other errors during processing
     """
     try:
-        logger.info(f"Starting multimodal reasoning with query: {q}")
-        logger.info(f"Using image from path: {image_path}")
+        # Parse input to extract text and image_path
+        if isinstance(query, str):
+            try:
+                # Try parsing as JSON string
+                input_dict = json.loads(query)
+            except json.JSONDecodeError:
+                # If not JSON, assume it's a text query
+                raise ValueError("Invalid input format. Expected JSON string or dictionary")
+        else:
+            input_dict = query
+            
+        # Extract required fields
+        if not isinstance(input_dict, dict):
+            raise ValueError("Input must be a dictionary or JSON string")
+            
+        text = input_dict.get('text')
+        image_path = input_dict.get('image_path')
         
-        # Input validation
-        if not q or not q.strip():
-            raise ValueError("Query cannot be empty")
+        # Validate inputs
+        if not text or not text.strip():
+            raise ValueError("Query text cannot be empty")
         if not image_path or not os.path.exists(image_path):
             raise ValueError(f"Invalid image path: {image_path}")
             
-        response = generate_multimodal_content(q, image_path)
-        logger.info("Successfully generated multimodal response")
-        return response
+        logger.info(f"Starting multimodal reasoning with query: {text}")
+        logger.info(f"Using image from path: {image_path}")
         
+        # Generate response using multimodal content function
+        response = generate_multimodal_content(text, image_path)
+        logger.info("Successfully generated multimodal response")
+        
+        return response
     except Exception as e:
-        logger.error(f"Failed to perform multimodal reasoning: {str(e)}")
+        error_msg = f"Failed to perform multimodal reasoning: {str(e)}"
+        logger.error(error_msg)
         raise
 
 
