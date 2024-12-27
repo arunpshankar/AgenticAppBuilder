@@ -2,6 +2,7 @@ from src.config.client import initialize_genai_client
 from src.llm.gemini_text import generate_content
 from src.config.setup import GOOGLE_ICON_PATH
 from src.agents.react import run_react_agent
+from src.utils.template import TemplateLoader
 from src.config.logging import logger
 from typing import Optional
 from typing import Tuple
@@ -14,6 +15,9 @@ import base64
 import ast
 import os
 import re
+
+# Initialize template loader
+template_loader = TemplateLoader()
 
 
 def extract_image_urls(text: str) -> list:
@@ -52,9 +56,6 @@ def extract_image_urls(text: str) -> list:
             
     return urls
 
-
-
-import re
 
 def extract_and_clean_text(text: str) -> tuple[list[str], str]:
     """
@@ -109,8 +110,6 @@ def extract_and_clean_text(text: str) -> tuple[list[str], str]:
     return urls, processed_text
 
 
-
-
 def validate_image_url(url: str) -> bool:
     """Validates if a URL points to an accessible image."""
     try:
@@ -119,6 +118,7 @@ def validate_image_url(url: str) -> bool:
                 'image' in response.headers.get('content-type', ''))
     except:
         return False
+
 
 def render_image(url: str) -> str:
     """Renders an image with fallback handling."""
@@ -333,162 +333,8 @@ def run():
         initial_sidebar_state="expanded"
     )
 
-    # Add CSS for clip icon and thumbnail
-    st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Righteous&display=swap');
-
-    /* Base Styles */
-    html, body {
-        font-family: 'Nunito Sans', 'Helvetica', sans-serif;
-        font-size: 14px;
-        background-color: #f8f8f8;
-    }
-
-    /* Typography */
-    h1, h2, h3, h4 {
-        font-family: 'Righteous', 'Cascadia Code', monospace;
-        color: #222;
-    }
-
-    /* Title Styles */
-    .main-title {
-        background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        font-size: 4rem;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 10px;
-        font-family: 'Righteous', cursive;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        animation: gradient 5s ease infinite;
-        background-size: 300% 300%;
-    }
-
-    .subtitle {
-        font-size: 1.5rem;
-        text-align: center;
-        color: #666;
-        margin-bottom: 30px;
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(120deg, #FF69B4, #4B0082);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-    }
-
-    /* Search Container */
-    .search-container {
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 20px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        position: relative;
-        padding-bottom: 60px; /* Add space for thumbnail */
-    }
-
-  
-
-    .stTextInput input:focus {
-        border-color: #4CAF50;
-        box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
-        background: white;
-    }
-
-    /* Button Styles */
-    .stButton button {
-        padding: 12px 30px;
-        font-size: 16px;
-        font-weight: 500;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        background: linear-gradient(45deg, #2196F3, #4CAF50);
-        border: none;
-        color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .stButton button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    /* Upload Section */
-    .search-wrapper {
-        position: relative;
-        margin: 20px 0;
-    }
-
-    .thumbnail-wrapper {
-        position: absolute;
-        bottom: -45px;
-        left: 50px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .thumbnail {
-        width: 40px;
-        height: 40px;
-        border-radius: 4px;
-        object-fit: cover;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .remove-thumbnail {
-        cursor: pointer;
-        color: #666;
-        font-size: 18px;
-        padding: 4px;
-        border-radius: 50%;
-        background: white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-    }
-
-    .remove-thumbnail:hover {
-        color: #ff4444;
-        transform: scale(1.1);
-    }
-
-    /* Reasoning Title */
-    .reasoning-title {
-        background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        font-size: 4rem;
-        font-weight: 700;
-        text-align: left;
-        margin-bottom: 10px;
-        font-family: 'Righteous', cursive;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        animation: gradient 5s ease infinite;
-        background-size: 300% 300%;
-    }
-
-    /* Animation */
-    @keyframes gradient {
-        0% {
-            background-position: 0% 50%;
-        }
-        50% {
-            background-position: 100% 50%;
-        }
-        100% {
-            background-position: 0% 50%;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+    # Load and inject templates
+    st.markdown(template_loader.get_combined_styles(), unsafe_allow_html=True)
 
     with st.sidebar:
         if os.path.exists(GOOGLE_ICON_PATH):
