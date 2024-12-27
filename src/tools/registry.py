@@ -1123,7 +1123,6 @@ if __name__ == "__main__":
             tests_failed += 1
 
     # Running tests
-    """
     run_test("get_wiki_search_results", get_wiki_search_results, "Python (programming language)")
     run_test("get_cat_fact", get_cat_fact)
     run_test("get_cat_fact with max_length", get_cat_fact, max_length=50)
@@ -1165,7 +1164,6 @@ if __name__ == "__main__":
     run_test("get_google_events_basic_search", get_google_events_basic_search, q="Events in Austin TX", hl="en", gl="us", location="Austin,Texas,United States")
     run_test("get_google_play_query_search", get_google_play_query_search, q="weather apps", hl="en", gl="us")
     run_test("get_google_videos_basic_search", get_google_videos_basic_search, q="funny cats", hl="en", gl="us")
-    """
     run_test("get_youtube_basic_search", get_youtube_basic_search, q="star wars", hl="en", gl="us")
     run_test("get_multimodal_reasoning", get_multimodal_reasoning, q="Describe what you see in this image", image_path="./tmp/uploads/sample.jpg")
 
