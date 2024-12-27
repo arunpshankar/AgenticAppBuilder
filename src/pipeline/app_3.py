@@ -20,6 +20,78 @@ import re
 # Initialize template loader
 template_loader = TemplateLoader()
 
+def extract_image_urls_from_observation(observation: dict) -> list:
+    """
+    Extracts image URLs directly from the SerpAPI image search observation result.
+    
+    Args:
+        observation (dict): The observation result from image_search tool
+        
+    Returns:
+        list: List of extracted image URLs
+    """
+    image_urls = []
+    print("Raw observation:", observation)  # Debug print
+    
+    try:
+        # If observation is a string, try to parse it
+        if isinstance(observation, str):
+            try:
+                observation = ast.literal_eval(observation)
+            except:
+                print("Failed to parse observation string")
+                return image_urls
+                
+        if not isinstance(observation, dict):
+            print(f"Invalid observation type after parsing: {type(observation)}")
+            return image_urls
+            
+        # Traverse nested dictionaries to find image results
+        if 'observation' in observation:
+            observation = observation['observation']
+        
+        if isinstance(observation, str):
+            try:
+                observation = ast.literal_eval(observation)
+            except:
+                print("Failed to parse nested observation string")
+                return image_urls
+                
+        # Look for image results in possible locations
+        if 'image_results' in observation:
+            results = observation['image_results']
+        elif 'images_results' in observation:
+            results = observation['images_results']
+        elif 'inline_images' in observation:
+            results = observation['inline_images']
+        else:
+            print("No recognized image results field found")
+            print("Available keys:", observation.keys())
+            return image_urls
+            
+        print("Found results array:", results)  # Debug print
+            
+        # Extract URLs from results
+        for result in results:
+            if isinstance(result, dict):
+                # Try all possible URL fields
+                for field in ['original', 'link', 'image', 'thumbnail', 'original_image']:
+                    if field in result and result[field]:
+                        url = result[field]
+                        if isinstance(url, str) and url.startswith('http'):
+                            image_urls.append(url)
+                            break
+                            
+        print(f"Extracted {len(image_urls)} image URLs from observation")
+        print("Extracted URLs:", image_urls)  # Debug print
+                    
+    except Exception as e:
+        print(f"Error extracting image URLs from observation: {str(e)}")
+        import traceback
+        print("Traceback:", traceback.format_exc())
+        
+    return image_urls
+
 def extract_image_urls(text: str) -> list:
     print(text, '<<' * 100)
     """
@@ -144,7 +216,7 @@ def linkify_urls(text: str) -> str:
         r"<a href='\g<0>' target='_blank' style='color: #1f77b4;'>\g<0></a>", 
         text
     )
-    
+
 def download_image(url: str) -> Optional[str]:
     """Downloads an image from a URL and saves it locally."""
     try:
@@ -243,8 +315,32 @@ def display_message(role: str, content: str, final_answer_container=None):
             answer_container = final_answer_container.container()
             image_container = final_answer_container.container()
             
-            # Extract URLs and clean text using our enhanced function
-            all_urls, processed_text = extract_and_clean_text(text)
+            # Check if the text is a dict and might be an observation
+            try:
+                if isinstance(text, dict):
+                    # Direct dictionary input
+                    all_urls = extract_image_urls_from_observation(text)
+                    processed_text = str(text)
+                elif isinstance(text, str):
+                    try:
+                        # Try to parse as dictionary
+                        observation = ast.literal_eval(text)
+                        if isinstance(observation, dict):
+                            # Successfully parsed as dictionary
+                            all_urls = extract_image_urls_from_observation(observation)
+                            processed_text = text
+                        else:
+                            # Not a valid observation dictionary
+                            all_urls, processed_text = extract_and_clean_text(text)
+                    except:
+                        # Parsing failed, treat as normal text
+                        all_urls, processed_text = extract_and_clean_text(text)
+                else:
+                    # Other type, convert to string
+                    all_urls, processed_text = extract_and_clean_text(str(text))
+            except Exception as e:
+                print(f"Error in URL extraction: {e}")
+                all_urls, processed_text = extract_and_clean_text(str(text))
             
             # Process markdown formatting
             processed_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', processed_text)
@@ -257,13 +353,14 @@ def display_message(role: str, content: str, final_answer_container=None):
 
             MODEL_ID: str = "gemini-2.0-flash-exp"
             prompt: str = f"""
-Clean and format it to nice markdown easy to read to the user - if there are images - say .. are shown below. 
+Clean and format it to nice markdown (DO NOT use italics) easy to read to the user (escape dollar sign) - if there are images - say .. are shown below. 
 Remove broken text and noise and make it professional. no fluff - no placeholders for images - 
 no urls - no explanation of changes. 
-be crisp and be aligned to the query\n\n{processed_text}\n strictly no placeholder for images like eg., Image 2 displayed below or [image] or [url] etc. """
+be crisp and be aligned to the query\n\n{processed_text}\n strictly no placeholder for images like eg., Image 2 displayed below or [image] or [url] etc. DO NOT use italics in markdown."""
 
             # Generate content
             response = generate_content(gemini_client, MODEL_ID, prompt).text
+            print(response, 'ppp' * 1000)
                 
             # Display final answer first
             answer_container.markdown(
@@ -288,26 +385,24 @@ be crisp and be aligned to the query\n\n{processed_text}\n strictly no placehold
                     # Create a card-like container for each image
                     with cols[col_idx]:
                         st.markdown(
-            f"""
-            <div style="
-                width: 100%; 
-                display: flex; 
-                justify-content: center; 
-                align-items: center;  /* Center image vertically */
-                overflow: hidden;   /* Hide any content that overflows */
-                height: {image_height}px;  /* Set a fixed height for the container */
-            "> 
-                <img src="{url}" style="
-                    width: {image_width}px; 
-                    height: {image_height}px; 
-                    object-fit: cover; 
-                "> 
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-                    
-            
+                            f"""
+                            <div style="
+                                width: 100%; 
+                                display: flex; 
+                                justify-content: center; 
+                                align-items: center;
+                                overflow: hidden;
+                                height: {image_height}px;
+                            "> 
+                                <img src="{url}" style="
+                                    width: {image_width}px; 
+                                    height: {image_height}px; 
+                                    object-fit: cover; 
+                                "> 
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
         # Style mapping for different block types
         style_map = {
