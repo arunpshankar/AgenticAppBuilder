@@ -84,3 +84,10 @@ Google Events Basic Search,events,"Retrieve events based on a query (e.g., 'Even
 Google Play Apps Query Search,google_play,Retrieve app listings from the Google Play Store by search query.
 Google Videos Basic Search,videos,Retrieve video search results from Google Videos by query.
 YouTube Basic Search,youtube,Retrieve YouTube search results by providing a search_query.
+
+
+Here's the single-line version of the Google Trends API documentation:
+
+Here's the endpoint documentation with double curly braces:
+
+Google Trends Compared Breakdown by Region | trends | https://serpapi.com | /search?engine=google_trends | Retrieve 'Compared breakdown by region' data for multiple queries. | q (required, multiple queries, comma-separated), data_type=GEO_MAP (required), geo (optional, string), region (optional, string), date (optional, string), api_key (required, string) | GET https://serpapi.com/search?engine=google_trends&q=coffee,tea&data_type=GEO_MAP&geo=US&region=COUNTRY&date=today+3-m&api_key=YOUR_API_KEY | {{search_metadata: {{status: Success}}, search_parameters: {{q: coffee,tea, data_type: GEO_MAP, geo: US, region: COUNTRY}}, compared_breakdown_by_region: [{{geo_name: California, coffee: 60, tea: 40}}, ...]}}
