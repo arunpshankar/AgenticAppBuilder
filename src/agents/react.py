@@ -44,7 +44,7 @@ from src.tools.registry import get_zip_info
 from src.tools.registry import get_lyrics
 from src.config.logging import logger
 from src.utils.io import read_file
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Callable, Optional, Any 
 from typing import Union, List, Dict
 from enum import Enum, auto 
@@ -114,6 +114,16 @@ class Message(BaseModel):
     role: str
     content: str
 
+    @field_validator('content')
+    @classmethod
+    def validate_content(cls, v: Any) -> str:
+        """Validate and convert content to string format."""
+        if isinstance(v, dict):
+            return str(v)
+        elif not isinstance(v, str):
+            return str(v)
+        return v
+
 class ActionState(BaseModel):
     tool_name: str
     input: str
@@ -130,8 +140,8 @@ class Agent:
         self.current_iteration = 0
         self.template = self.load_template()
         self.client = initialize_genai_client()
-        self.action_history: List[ActionState] = []  # Track action states
-        self.last_action_result: Optional[Any] = None  # Store last action result
+        self.action_history: List[ActionState] = []
+        self.last_action_result: Optional[Any] = None
 
     def get_last_action_result(self) -> Optional[Any]:
         """Get the result of the last executed action."""
@@ -257,10 +267,19 @@ class Agent:
             self.trace("assistant", f"I encountered an error: {str(e)}. Let me try again.")
             return None
 
-    def run_iter(self, query: str):
+    def run_iter(self, query: Dict[str, Any]):
         """Generator that yields data for current iteration."""
-        self.query = query
-        self.trace("user", query)
+        # Extract text and image path from query dictionary
+        if isinstance(query, dict):
+            self.query = query.get('text', '')
+            self.image_path = query.get('image_path')
+        else:
+            self.query = str(query)  # Convert to string if not a dict
+            self.image_path = None
+            
+        # Convert query to string for message trace
+        query_str = self.query if isinstance(self.query, str) else str(self.query)
+        self.trace("user", query_str)
 
         final_answer = None
 
@@ -274,7 +293,6 @@ class Agent:
                 }
                 break
             
-            # Extract messages from this iteration
             iteration_messages = []
             start_index = len(self.messages) - 1
             final_answer = self.decide_and_act(response)

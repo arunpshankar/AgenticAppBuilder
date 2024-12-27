@@ -1,20 +1,20 @@
-from src.agents.react import run_react_agent
+from src.config.client import initialize_genai_client
+from src.llm.gemini_text import generate_content
 from src.config.setup import GOOGLE_ICON_PATH
+from src.agents.react import run_react_agent
 from src.config.logging import logger
 from typing import Optional
 from typing import Tuple
+from pathlib import Path
 from typing import List 
 import streamlit as st
 import requests
+import datetime
+import base64
 import ast
 import os
 import re
-from pathlib import Path
-import logging
-from src.llm.gemini_text import generate_content
 
-from src.config.client import initialize_genai_client
-logger = logging.getLogger(__name__)
 
 def extract_image_urls(text: str) -> list:
     """
@@ -333,99 +333,162 @@ def run():
         initial_sidebar_state="expanded"
     )
 
+    # Add CSS for clip icon and thumbnail
     st.markdown(
-        """
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Righteous&display=swap');
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Righteous&display=swap');
 
-        html, body {
-            font-family: 'Nunito Sans', 'Helvetica', sans-serif;
-            font-size: 14px;
-            background-color: #f8f8f8;
+    /* Base Styles */
+    html, body {
+        font-family: 'Nunito Sans', 'Helvetica', sans-serif;
+        font-size: 14px;
+        background-color: #f8f8f8;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 {
+        font-family: 'Righteous', 'Cascadia Code', monospace;
+        color: #222;
+    }
+
+    /* Title Styles */
+    .main-title {
+        background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: 4rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 10px;
+        font-family: 'Righteous', cursive;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        animation: gradient 5s ease infinite;
+        background-size: 300% 300%;
+    }
+
+    .subtitle {
+        font-size: 1.5rem;
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(120deg, #FF69B4, #4B0082);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Search Container */
+    .search-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        position: relative;
+        padding-bottom: 60px; /* Add space for thumbnail */
+    }
+
+  
+
+    .stTextInput input:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
+        background: white;
+    }
+
+    /* Button Styles */
+    .stButton button {
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: linear-gradient(45deg, #2196F3, #4CAF50);
+        border: none;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stButton button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Upload Section */
+    .search-wrapper {
+        position: relative;
+        margin: 20px 0;
+    }
+
+    .thumbnail-wrapper {
+        position: absolute;
+        bottom: -45px;
+        left: 50px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .thumbnail {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        object-fit: cover;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .remove-thumbnail {
+        cursor: pointer;
+        color: #666;
+        font-size: 18px;
+        padding: 4px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+
+    .remove-thumbnail:hover {
+        color: #ff4444;
+        transform: scale(1.1);
+    }
+
+    /* Reasoning Title */
+    .reasoning-title {
+        background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: 4rem;
+        font-weight: 700;
+        text-align: left;
+        margin-bottom: 10px;
+        font-family: 'Righteous', cursive;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        animation: gradient 5s ease infinite;
+        background-size: 300% 300%;
+    }
+
+    /* Animation */
+    @keyframes gradient {
+        0% {
+            background-position: 0% 50%;
         }
-        h1, h2, h3, h4 {
-            font-family: 'Righteous', 'Cascadia Code', monospace;
-            color: #222;
+        50% {
+            background-position: 100% 50%;
         }
-        .main-title {
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 4rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 10px;
-            font-family: 'Righteous', cursive;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            animation: gradient 5s ease infinite;
-            background-size: 300% 300%;
+        100% {
+            background-position: 0% 50%;
         }
-        .subtitle {
-            font-size: 1.5rem;
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(120deg, #FF69B4, #4B0082);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .search-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .stTextInput input {
-            padding: 12px 20px;
-            font-size: 16px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            background: #f8f9fa;
-            transition: all 0.3s ease;
-        }
-        .stTextInput input:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
-            background: white;
-        }
-        .stButton button {
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            background: linear-gradient(45deg, #2196F3, #4CAF50);
-            border: none;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .stButton button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        .reasoning-title {
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 4rem;
-            font-weight: 700;
-            text-align: left;
-            margin-bottom: 10px;
-            font-family: 'Righteous', cursive;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            animation: gradient 5s ease infinite;
-            background-size: 300% 300%;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
     with st.sidebar:
         if os.path.exists(GOOGLE_ICON_PATH):
@@ -443,14 +506,70 @@ def run():
     st.markdown("<h1 class='main-title'>Agentic Search</h1>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle'>Discover Insights Through AI-Powered Exploration</div>", unsafe_allow_html=True)
 
-    user_query = st.text_input(
-        "",
-        key="explore_question",
-        label_visibility="collapsed",
-        placeholder="Ask anything...",
-        help="Type your question here!"
-    )
+    # Create a container for the search components
+    search_container = st.container()
+    
+    with search_container:
+        st.markdown('<div class="search-wrapper">', unsafe_allow_html=True)
+        
+        # Main search input
+        user_query = st.text_input(
+            "",
+            key="explore_question",
+            label_visibility="collapsed",
+            placeholder="Ask anything...",
+            help="Type your question here!"
+        )
+        
+        # Hidden file uploader triggered by clip icon
+        uploaded_file = st.file_uploader(
+            "Upload Image",
+            type=['png', 'jpg', 'jpeg'],
+            key="hidden_uploader",
+            label_visibility="collapsed"
+        )
+        
+        # Clip icon and thumbnail display
+        if uploaded_file is None:
+            st.markdown(
+                """
+                <div class="clip-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            # Save the uploaded image
+            if not os.path.exists('tmp/uploads'):
+                os.makedirs('tmp/uploads', exist_ok=True)
+            
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_filename = "".join(c for c in uploaded_file.name if c.isalnum() or c in ('-', '_')).lower()
+            unique_filename = f"{timestamp}_{safe_filename}"
+            image_path = os.path.join('tmp/uploads', unique_filename)
+            
+            with open(image_path, 'wb') as f:
+                f.write(uploaded_file.getbuffer())
+            
+            # Display thumbnail and remove button
+            st.markdown(
+                f"""
+                <div class="thumbnail-wrapper">
+                    <img src="data:image/jpeg;base64,{base64.b64encode(uploaded_file.getvalue()).decode()}" 
+                         class="thumbnail" alt="Uploaded image thumbnail"/>
+                    <div class="remove-thumbnail">×</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
+    # Center the Explore button
     _, col2, _ = st.columns([6,2,6])
     with col2:
         search_clicked = st.button(
@@ -463,39 +582,61 @@ def run():
     if search_clicked and user_query.strip():
         final_answer_container = st.container()
         
+        # Prepare query with image if present
+        if uploaded_file is not None:
+            query_data = {
+                "text": user_query,
+                "image_path": image_path
+            }
+        else:
+            query_data = {
+                "text": user_query,
+                "image_path": None
+            }
+
         st.markdown(
             """
             <h2 class='reasoning-title'>
                 Reasoning Trace
             </h2>
             """,
-            unsafe_allow_html=True)
+            unsafe_allow_html=True
+        )
 
-        for iteration_count, data in enumerate(
-            run_react_agent(user_query, max_iterations), start=1
-        ):
-            st.markdown(
-                f"""
-                <div style='margin:24px 0 12px 0;'>
-                    <span style='
-                        color:#333;
-                        font-size:14px;
-                        font-weight:500;
-                        text-transform:uppercase;
-                        letter-spacing:0.5px;
-                    '>
-                        Iteration {iteration_count}
-                    </span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            
-            for msg in data["messages"]:
-                display_message(msg.role, msg.content, final_answer_container)
+        try:
+            for iteration_count, data in enumerate(
+                run_react_agent(query_data, max_iterations), start=1
+            ):
+                st.markdown(
+                    f"""
+                    <div style='margin:24px 0 12px 0;'>
+                        <span style='color:#333; font-size:14px; font-weight:500; 
+                               text-transform:uppercase; letter-spacing:0.5px;'>
+                            Iteration {iteration_count}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                
+                for msg in data["messages"]:
+                    display_message(msg.role, msg.content, final_answer_container)
 
-            if data.get("done") or (iteration_count == max_iterations):
-                break
+                if data.get("done") or (iteration_count == max_iterations):
+                    break
+
+        except Exception as e:
+            st.error(f"An error occurred during processing: {str(e)}")
+            logger.error(f"Error in run_react_agent: {str(e)}", exc_info=True)
+        
+        finally:
+            # Cleanup uploaded image
+            if uploaded_file is not None and os.path.exists(image_path):
+                try:
+                    os.remove(image_path)
+                    logger.info(f"Cleaned up uploaded image: {image_path}")
+                except Exception as e:
+                    logger.error(f"Error cleaning up uploaded image: {str(e)}")
 
 if __name__ == "__main__":
     run()
