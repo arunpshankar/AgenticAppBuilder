@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 
-def generate_content(prompt: str, image_path: str) -> str:
+def generate_multimodal_content(prompt: str, image_path: str) -> str:
     """
     Generates content from a text prompt and local image.
     
@@ -31,7 +31,7 @@ def generate_content(prompt: str, image_path: str) -> str:
 
 if __name__ == "__main__":
     try:
-        content = generate_content(
+        content = generate_multimodal_content(
             "Write a short and engaging blog post based on this picture.",
             "./tmp/uploads/sample.jpg"
         )

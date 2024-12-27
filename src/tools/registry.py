@@ -1,15 +1,14 @@
+from src.llm.gemini_text_image import generate_multimodal_content
 from src.config.serp import get_api_key
 from src.config.logging import logger
 from typing import Optional
 from typing import Dict 
 from typing import List 
 from typing import Any 
-from PIL import Image
 import wikipediaapi
 import requests
 import json
-
-from src.llm.gemini_text_image import generate_content_multimodal
+import os 
 
 
 def get_wiki_search_results(query: str) -> Optional[str]:
@@ -1040,18 +1039,18 @@ def get_google_videos_basic_search(q: str, hl: Optional[str] = None, gl: Optiona
         raise
 
 
-def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
+def get_youtube_basic_search(q: str, hl: Optional[str] = None, gl: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve YouTube search results by providing a search query using SerpApi.
 
-    :param search_query: Search query (required).
+    :param q: Search query (required).
     :param hl: Language for the search (optional).
     :param gl: Geographic region for the search (optional).
     :return: A dictionary containing YouTube search results.
     :raises requests.HTTPError: If the request fails.
     """
     base_url = "https://serpapi.com/search"
-    params = {"engine": "youtube", "search_query": search_query, "api_key": get_api_key()}
+    params = {"engine": "youtube", "search_query": q, "api_key": get_api_key()}
     if hl:
         params["hl"] = hl
     if gl:
@@ -1060,61 +1059,44 @@ def get_youtube_basic_search(search_query: str, hl: Optional[str] = None, gl: Op
         response = requests.get(base_url, params=params)
         response.raise_for_status()
         youtube_data = response.json()
-        logger.info(f"Retrieved YouTube results for query '{search_query}': {youtube_data}")
+        logger.info(f"Retrieved YouTube results for query '{q}': {youtube_data}")
         return youtube_data
     except requests.RequestException as e:
-        logger.error(f"Failed to retrieve YouTube results for query '{search_query}': {e}")
+        logger.error(f"Failed to retrieve YouTube results for query '{q}': {e}")
         raise
 
 
-def process_image_from_path(file_path: str) -> Image.Image:
+def get_multimodal_reasoning(q: str, image_path: str) -> str:
     """
-    Loads and processes an image from a local file path.
+    Perform multimodal reasoning on text and image inputs using Gemini model.
 
     Args:
-        file_path (str): Local file path of the image to process.
+        q (str): Text query/prompt to guide the reasoning
+        image_path (str): Local file path to the image
 
     Returns:
-        Image.Image: Processed PIL Image object.
+        str: Generated reasoning/response from Gemini model
+        
+    Raises:
+        ValueError: If image_path is invalid or image cannot be loaded
+        Exception: For other errors during processing
     """
-    logger.info("Loading image from local file path: %s", file_path)
     try:
-        img_path = Path(file_path)
-        if not img_path.exists():
-            logger.error("File not found: %s", file_path)
-            raise FileNotFoundError(f"File not found: {file_path}")
-
-        image = Image.open(img_path)
-        # image.thumbnail([512, 512])
-        logger.info("Image processed successfully")
-        return image
+        logger.info(f"Starting multimodal reasoning with query: {q}")
+        logger.info(f"Using image from path: {image_path}")
+        
+        # Input validation
+        if not q or not q.strip():
+            raise ValueError("Query cannot be empty")
+        if not image_path or not os.path.exists(image_path):
+            raise ValueError(f"Invalid image path: {image_path}")
+            
+        response = generate_multimodal_content(q, image_path)
+        logger.info("Successfully generated multimodal response")
+        return response
+        
     except Exception as e:
-        logger.error("Failed to process image from path: %s", e)
-        raise
-
-def get_multimodal_search(client, model_id: str, image_path: str, prompt: str) -> str:
-    """
-    Generates content based on a given image and text prompt using the model.
-
-    Args:
-        client: Initialized Generative AI client.
-        model_id (str): Model ID for content generation.
-        image (Image.Image): PIL Image object.
-        prompt (str): Text prompt to guide the content generation.
-
-    Returns:
-        str: Generated content text.
-    """
-    logger.info("Starting content generation with the provided image and text prompt")
-    image = process_image_from_path(image_path)
-    try:
-        response = client.models.generate_content(
-            model=model_id,
-            contents=[image, prompt]
-        )
-        return response.text
-    except Exception as e:
-        logger.error("Failed to generate content: %s", e)
+        logger.error(f"Failed to perform multimodal reasoning: {str(e)}")
         raise
 
 
@@ -1141,6 +1123,7 @@ if __name__ == "__main__":
             tests_failed += 1
 
     # Running tests
+    """
     run_test("get_wiki_search_results", get_wiki_search_results, "Python (programming language)")
     run_test("get_cat_fact", get_cat_fact)
     run_test("get_cat_fact with max_length", get_cat_fact, max_length=50)
@@ -1182,7 +1165,8 @@ if __name__ == "__main__":
     run_test("get_google_events_basic_search", get_google_events_basic_search, q="Events in Austin TX", hl="en", gl="us", location="Austin,Texas,United States")
     run_test("get_google_play_query_search", get_google_play_query_search, q="weather apps", hl="en", gl="us")
     run_test("get_google_videos_basic_search", get_google_videos_basic_search, q="funny cats", hl="en", gl="us")
-    run_test("get_youtube_basic_search", get_youtube_basic_search, search_query="star wars", hl="en", gl="us")
-
+    """
+    run_test("get_youtube_basic_search", get_youtube_basic_search, q="star wars", hl="en", gl="us")
+    run_test("get_multimodal_reasoning", get_multimodal_reasoning, q="Describe what you see in this image", image_path="./tmp/uploads/sample.jpg")
 
     logger.info(f"Tests completed. Passed: {tests_passed}, Failed: {tests_failed}")
