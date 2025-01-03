@@ -38,6 +38,7 @@ Remember:
 - Provide a final answer only when you're confident you have sufficient information.
 - If you cannot find the necessary information after using available tools, admit that you don't have enough information to answer the query confidently.
 - When both query and image context is provided, consider using GEMINI_MULTIMODAL 
+- when images are asked by the user, make sure to extract relevant URLs (IMPORTANT)
 
 
 Here is a matrix of what the tools (APIs) can do:

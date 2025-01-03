@@ -309,7 +309,7 @@ def display_message(role: str, content: str, final_answer_container=None):
             break
 
     for block_type, text in blocks:
-        print(block_type, text, ')))))))')
+        print(block_type, '9' * 1000)
         if block_type == "final answer" and final_answer_container is not None:
             # Create separate containers for answer and images
             answer_container = final_answer_container.container()
@@ -345,13 +345,10 @@ def display_message(role: str, content: str, final_answer_container=None):
             # Process markdown formatting
             processed_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', processed_text)
             
-            print('VVVVV')
-            print(all_urls)
-            print(processed_text)
-            
             gemini_client = initialize_genai_client()
 
             MODEL_ID: str = "gemini-2.0-flash-exp"
+            #MODEL_ID: str = 'gemini-2.0-flash-thinking-exp-1219'
             prompt: str = f"""
 Clean and format it to nice markdown (DO NOT use italics) easy to read to the user (escape dollar sign) - if there are images - say .. are shown below. 
 Remove broken text and noise and make it professional. no fluff - no placeholders for images - 
@@ -360,7 +357,6 @@ be crisp and be aligned to the query\n\n{processed_text}\n strictly no placehold
 
             # Generate content
             response = generate_content(gemini_client, MODEL_ID, prompt).text
-            print(response, 'ppp' * 1000)
                 
             # Display final answer first
             answer_container.markdown(
@@ -372,8 +368,9 @@ be crisp and be aligned to the query\n\n{processed_text}\n strictly no placehold
 
             # Handle and display images in a uniform grid
             if all_urls:
-                # Create columns for the image grid - adjust number of columns as needed
-                cols = image_container.columns(5)
+                # Create columns for the image grid - specify number of columns
+                num_columns = 5  # Define fixed number of columns
+                cols = image_container.columns(num_columns)
                 
                 # Calculate image dimensions for uniform tiles
                 image_width = 500  # Fixed width for all images
@@ -381,7 +378,7 @@ be crisp and be aligned to the query\n\n{processed_text}\n strictly no placehold
                 
                 # Iterate through URLs and display in grid
                 for idx, url in enumerate(all_urls):
-                    col_idx = idx % 6  # Determine which column to place the image
+                    col_idx = idx % num_columns  # Use same number as created columns
                     # Create a card-like container for each image
                     with cols[col_idx]:
                         st.markdown(
@@ -421,6 +418,7 @@ be crisp and be aligned to the query\n\n{processed_text}\n strictly no placehold
             </div>""",
             unsafe_allow_html=True
         )
+
 
 def run():
     st.set_page_config(
