@@ -1,4 +1,0 @@
-# Project-level configuration
-project_id: arun-genai-bb
-credentials_json: ./credentials/key.json
-region: us-central1
