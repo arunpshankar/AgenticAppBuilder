@@ -309,7 +309,6 @@ def display_message(role: str, content: str, final_answer_container=None):
             break
 
     for block_type, text in blocks:
-        print(block_type, '9' * 1000)
         if block_type == "final answer" and final_answer_container is not None:
             # Create separate containers for answer and images
             answer_container = final_answer_container.container()
