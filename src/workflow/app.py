@@ -1,99 +1,21 @@
-from src.workflow.helper import load_available_apps
-from concurrent.futures import ThreadPoolExecutor 
 from src.config.setup import GOOGLE_ICON_PATH
-from src.llm.generate import build_app_code
-from src.config.setup import PROJECT_ROOT 
-from src.utils.io import save_app_code 
 from src.config.logging import logger 
 from src.db.crud import get_entries 
-from typing import List 
+from src.workflow.helper import * 
 import streamlit as st 
-import importlib.util 
-import pandas as pd 
 import os 
 
 
-def display_ideas(ideas: List[dict]) -> None:
-    st.subheader("Ideation Results")
-    st.write("Select one or more ideas to build into separate apps:")
+def run() -> None:
+    """
+    Main entry point for the Agentic App Builder Streamlit application. Sets up the page configuration,
+    loads session state variables, and provides UI functionality for uploading CSV files, generating
+    ideas, and running or building apps.
 
-    rows = (len(ideas) // 3) + (1 if len(ideas) % 3 > 0 else 0)
-    current_selected_ideas = []
-
-    for row_i in range(rows):
-        cols = st.columns(3, gap="small")
-        for col_i in range(3):
-            idea_index = row_i * 3 + col_i
-            if idea_index < len(ideas):
-                idea = ideas[idea_index]
-                with cols[col_i]:
-                    st.markdown(f"""
-                    <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:15px;">
-                        <h4 style="margin-top:0; margin-bottom:5px;">{idea['title']}</h4>
-                        <p style="margin-top:0; margin-bottom:10px;">{idea['description']}</p>
-                        <p style="margin-bottom:5px;"><strong>APIs Used:</strong> {", ".join(idea['apis_used'])}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    selected = st.checkbox("Select this idea", key=f"idea_select_{idea_index}")
-                    if selected:
-                        current_selected_ideas.append(idea)
-
-    st.session_state["selected_ideas"] = current_selected_ideas
-
-def build_app_for_idea(idea: dict, selected_entries: pd.DataFrame):
-    app_name = idea['title']
-    app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
-    apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
-    os.makedirs(apps_dir, exist_ok=True)
-
-    # Build code for this idea
-    frontend_code, backend_code = build_app_code([idea], app_name_slug, entries=selected_entries)
-    save_app_code(app_name_slug, frontend_code, backend_code)
-
-    return app_name_slug
-
-def build_selected_apps(selected_ideas: List[dict]) -> None:
-    if not selected_ideas:
-        st.warning("Please select at least one idea before building.")
-        return
-
-    st.info("Preparing to generate application code. Please wait...")
-    logger.info(f"Building apps for selected ideas: {[idea['title'] for idea in selected_ideas]}")
-
-    selected_entries = st.session_state.get("display_df", pd.DataFrame())
-    selected_entries_df = selected_entries[selected_entries["Select"]] if "Select" in selected_entries.columns else pd.DataFrame()
-
-    try:
-        with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(build_app_for_idea, idea, selected_entries_df) for idea in selected_ideas]
-            results = [f.result() for f in futures]
-
-        st.session_state["app_build_success_message"] = f"Apps generated for these ideas: {', '.join(results)}"
-        load_available_apps()
-        st.rerun()
-    except Exception as e:
-        logger.error(f"Error building the app(s): {e}")
-        st.error(f"An error occurred while building the app(s): {e}")
-
-def run_app(app_path: str) -> None:
-    try:
-        spec = importlib.util.spec_from_file_location("generated_app", app_path)
-        generated_app = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(generated_app)
-
-        if hasattr(generated_app, 'main'):
-            generated_app.main()
-        else:
-            raise AttributeError("The selected app does not have a main() function to run.")
-    except Exception as e:
-        app_name_slug = os.path.basename(os.path.dirname(app_path))
-        st.session_state["run_error"] = {
-            "app_name_slug": app_name_slug,
-            "error_message": str(e)
-        }
-        return
-
-def run():
+    Raises:
+        Exception: Handles exceptions for refreshing entries, running apps, or other UI interactions.
+    """
+    # Configure the page
     st.set_page_config(
         page_title="Agentic App Builder",
         layout="wide",
@@ -101,56 +23,59 @@ def run():
         initial_sidebar_state="expanded"
     )
 
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-    body {
-        font-family: 'Nunito Sans', 'Helvetica', sans-serif;
-        font-size: 14px;
-        color: #333;
-        background-color: #f8f8f8;
-    }
-    h1, h2, h3, h4 {
-        font-family: 'Cascadia Code', 'Monaco', monospace;
-        color: #222;
-    }
-    [data-testid="stDataFrameContainer"] div[data-baseweb="checkbox"] input:checked ~ div {
-        background-color: #4CAF50 !important;
-        border-color: #4CAF50 !important;
-    }
+    # Load CSS styles
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Nunito Sans', 'Helvetica', sans-serif;
+            font-size: 14px;
+            color: #333;
+            background-color: #f8f8f8;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Cascadia Code', 'Monaco', monospace;
+            color: #222;
+        }
+        [data-testid="stDataFrameContainer"] div[data-baseweb="checkbox"] input:checked ~ div {
+            background-color: #4CAF50 !important;
+            border-color: #4CAF50 !important;
+        }
 
-    .rainbow-title {
-    font-size: 2.5em;
-    font-weight: 800;
-    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    }
+        .rainbow-title {
+        font-size: 2.5em;
+        font-weight: 800;
+        background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    </style>
-    """, unsafe_allow_html=True)
-
-    if "logs" not in st.session_state:
-        st.session_state["logs"] = []
-    if "ideas" not in st.session_state:
-        st.session_state["ideas"] = []
-    if "entries_df" not in st.session_state:
-        st.session_state["entries_df"] = get_entries()
-    if "selected_ideas" not in st.session_state:
-        st.session_state["selected_ideas"] = []
-    if "app_built" not in st.session_state:
-        st.session_state["app_built"] = False
-    if "available_apps" not in st.session_state:
-        st.session_state["available_apps"] = {}
+    # Initialize session state variables
+    for key, default in {
+        "logs": [],
+        "ideas": [],
+        "entries_df": get_entries(),
+        "selected_ideas": [],
+        "app_built": False,
+        "available_apps": {}
+    }.items():
+        if key not in st.session_state:
+            st.session_state[key] = default
 
     load_available_apps()
 
+    # Sidebar setup
     with st.sidebar:
         if os.path.exists(GOOGLE_ICON_PATH):
             st.image(GOOGLE_ICON_PATH, width=40)
-        
+
         st.markdown("<h2 style='font-family: Inter, sans-serif; color:#ea4335;'>Test Panel</h2>", unsafe_allow_html=True)
 
         ideate_trigger = st.button("Ideate", help="Start the ideation process to generate API combination ideas.", type="primary")
@@ -171,6 +96,7 @@ def run():
             error_message = st.session_state["run_error"]["error_message"]
             st.error(f"Error running the app: {error_message}")
 
+    # Main content
     st.markdown("<h1 class='rainbow-title'>Agentic App Builder</h1>", unsafe_allow_html=True)
 
     st.subheader("Upload CSV")
@@ -193,10 +119,12 @@ def run():
     display_entries(st.session_state["entries_df"])
 
     if ideate_trigger:
-        st.session_state["ideas"] = []
-        st.session_state["logs"] = []
-        st.session_state["selected_ideas"] = []
-        st.session_state["app_built"] = False
+        st.session_state.update({
+            "ideas": [],
+            "logs": [],
+            "selected_ideas": [],
+            "app_built": False
+        })
 
         st.info("Ideation process started...")
         logs_area = logs_container.empty()
@@ -229,6 +157,7 @@ def run():
         st.subheader("Your App(s) are Ready!")
         st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directories.")
         st.markdown("You can now select them from the sidebar to run them inline.")
+
 
 if __name__ == "__main__":
     try:

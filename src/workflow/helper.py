@@ -1,14 +1,19 @@
+from concurrent.futures import ThreadPoolExecutor 
+from src.llm.generate import build_app_code
 from src.llm.generate import generate_ideas
 from src.db.crud import purge_and_load_csv  
 from src.config.setup import PROJECT_ROOT
+from src.utils.io import save_app_code 
 from src.config.setup import CSV_PATH 
 from src.config.logging import logger
 from typing import Generator
 from typing import Optional 
 from typing import Tuple
 from typing import Union
+from typing import Dict 
 from typing import List 
 import streamlit as st 
+import importlib.util 
 import pandas as pd
 import time 
 import os 
@@ -194,7 +199,7 @@ def display_entries(entries_df: Optional[pd.DataFrame]) -> None:
     except Exception as e:
         logger.error(f"Error while displaying entries: {e}")
         st.error(f"An error occurred while displaying entries: {e}")
-        
+
 
 def display_ideas(ideas: List[dict]) -> None:
     """
@@ -249,3 +254,130 @@ def display_ideas(ideas: List[dict]) -> None:
     except Exception as e:
         logger.error(f"Error displaying ideas: {e}")
         st.error(f"An error occurred while displaying ideas: {e}")
+
+
+def build_app_for_idea(idea: Dict, selected_entries: pd.DataFrame) -> str:
+    """
+    Builds an app for the given idea by generating and saving the corresponding frontend and backend code.
+
+    Args:
+        idea (Dict): A dictionary containing details about the idea, including its title.
+        selected_entries (pd.DataFrame): A DataFrame of selected entries to be used in the app.
+
+    Returns:
+        str: The slugified name of the app directory where the code is saved.
+
+    Raises:
+        KeyError: If the 'title' key is missing in the idea dictionary.
+        Exception: For any errors during app directory creation or code generation.
+    """
+    try:
+        if 'title' not in idea:
+            logger.error("The idea dictionary is missing the 'title' key.")
+            raise KeyError("The idea dictionary must contain a 'title' key.")
+
+        app_name = idea['title']
+        app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
+        apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
+
+        os.makedirs(apps_dir, exist_ok=True)
+        logger.info(f"Created or verified app directory: {apps_dir}")
+
+        # Build code for this idea
+        frontend_code, backend_code = build_app_code([idea], app_name_slug, entries=selected_entries)
+        save_app_code(app_name_slug, frontend_code, backend_code)
+
+        logger.info(f"App '{app_name}' built successfully with slug '{app_name_slug}'.")
+        return app_name_slug
+
+    except KeyError as e:
+        logger.error(f"Key error: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"An error occurred while building the app: {e}")
+        raise
+
+
+def build_selected_apps(selected_ideas: List[dict]) -> None:
+    """
+    Builds applications for the selected ideas by generating application code for each.
+
+    Args:
+        selected_ideas (List[dict]): A list of dictionaries representing selected ideas, each containing details such as the title.
+
+    Raises:
+        Exception: If any errors occur during the app-building process.
+    """
+    if not selected_ideas:
+        st.warning("Please select at least one idea before building.")
+        return
+
+    st.info("Preparing to generate application code. Please wait...")
+    logger.info(f"Building apps for selected ideas: {[idea['title'] for idea in selected_ideas]}")
+
+    selected_entries = st.session_state.get("display_df", pd.DataFrame())
+    selected_entries_df = (
+        selected_entries[selected_entries["Select"]]
+        if "Select" in selected_entries.columns else pd.DataFrame()
+    )
+
+    try:
+        with ThreadPoolExecutor() as executor:
+            futures = [
+                executor.submit(build_app_for_idea, idea, selected_entries_df)
+                for idea in selected_ideas
+            ]
+            results = [f.result() for f in futures]
+
+        st.session_state["app_build_success_message"] = (
+            f"Apps generated for these ideas: {', '.join(results)}"
+        )
+        logger.info("All selected apps were built successfully.")
+
+        load_available_apps()
+        st.experimental_rerun()
+    except Exception as e:
+        logger.error(f"Error building the app(s): {e}")
+        st.error(f"An error occurred while building the app(s): {e}")
+
+
+def run_app(app_path: str) -> None:
+    """
+    Executes a dynamically loaded app from the given file path.
+
+    Args:
+        app_path (str): Path to the app's Python file.
+
+    Raises:
+        AttributeError: If the app does not have a `main()` function.
+        Exception: For any errors during the app execution process.
+    """
+    try:
+        logger.info(f"Attempting to run app from path: {app_path}")
+
+        # Dynamically load the module from the given app path
+        spec = importlib.util.spec_from_file_location("generated_app", app_path)
+        generated_app = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generated_app)
+
+        # Check and execute the main function
+        if hasattr(generated_app, 'main'):
+            logger.info("Executing main() function of the generated app.")
+            generated_app.main()
+        else:
+            logger.error("The selected app does not have a main() function to run.")
+            raise AttributeError("The selected app does not have a main() function to run.")
+
+    except Exception as e:
+        app_name_slug = os.path.basename(os.path.dirname(app_path))
+        error_message = str(e)
+
+        logger.error(f"Error running app '{app_name_slug}': {error_message}")
+
+        # Store error details in session state
+        st.session_state["run_error"] = {
+            "app_name_slug": app_name_slug,
+            "error_message": error_message
+        }
+
+        st.error(f"An error occurred while running the app: {error_message}")
