@@ -18,6 +18,7 @@ BUILD_TEMPLATE_PATH = TEMPLATES_DIR + '/build.txt'
 FRONTEND_MARKERS = ("---BEGIN FRONTEND CODE---", "---END FRONTEND CODE---")
 BACKEND_MARKERS = ("---BEGIN BACKEND CODE---", "---END BACKEND CODE---")
 
+
 def build_prompt(entries: List[Dict[str, str]], num_ideas: int) -> str:
     """
     Builds a prompt using provided API entries and the number of ideas to generate.
@@ -43,6 +44,7 @@ def build_prompt(entries: List[Dict[str, str]], num_ideas: int) -> str:
         raise
 
     return template.format(apis_summary=apis_summary, num_ideas=num_ideas).strip()
+
 
 def extract_ideas_from_response(response: str) -> List[Dict[str, List[str]]]:
     """
@@ -89,6 +91,7 @@ def extract_ideas_from_response(response: str) -> List[Dict[str, List[str]]]:
 
     return ideas
 
+
 def generate_ideas(num_ideas: int = 3, selected_names: List[str] = None) -> List[Dict[str, List[str]]]:
     """
     Generates a specified number of ideas based on API entries.
@@ -124,6 +127,7 @@ def generate_ideas(num_ideas: int = 3, selected_names: List[str] = None) -> List
         logger.error(f"Error during idea generation: {e}")
         raise
 
+
 def extract_code_block(response: str, markers: Tuple[str, str]) -> str:
     """
     Extracts a code block from the response based on provided markers.
@@ -145,6 +149,7 @@ def extract_code_block(response: str, markers: Tuple[str, str]) -> str:
     except (IndexError, AttributeError) as e:
         logger.warning(f"No code block found for markers {markers}: {e}")
         return f"# No code block found for section: {start_marker}"
+
 
 def build_app_code(selected_ideas: List[Dict[str, List[str]]], app_name_slug: str, entries: pd.DataFrame) -> Tuple[str, str]:
     """
