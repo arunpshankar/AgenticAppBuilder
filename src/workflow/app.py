@@ -1,119 +1,17 @@
 from src.workflow.helper import load_available_apps
 from concurrent.futures import ThreadPoolExecutor 
 from src.config.setup import GOOGLE_ICON_PATH
-from src.llm.generate import generate_ideas
 from src.llm.generate import build_app_code
-from src.db.crud import purge_and_load_csv  
 from src.config.setup import PROJECT_ROOT 
 from src.utils.io import save_app_code 
-from src.config.setup import CSV_PATH 
 from src.config.logging import logger 
 from src.db.crud import get_entries 
-from typing import Generator
-from typing import Union
-from typing import Tuple 
 from typing import List 
 import streamlit as st 
 import importlib.util 
 import pandas as pd 
-import time  
 import os 
 
-
-def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dict]]], None, None]:
-    steps = [
-        "Initiating ideation process...",
-        "Analyzing available APIs from the database...",
-        "Formulating a prompt for Gemini LLM...",
-        "Asking Gemini for innovative API combination ideas...",
-        "Finalizing ideas..."
-    ]
-
-    for step in steps:
-        logger.debug(f"Ideation step: {step}")
-        yield step
-        time.sleep(1)
-
-    if "display_df" in st.session_state and "entries_df" in st.session_state:
-        selected_df = st.session_state["display_df"]
-        if "Select" in selected_df and selected_df["Select"].any():
-            selected_names = selected_df.loc[selected_df["Select"], "name"].tolist()
-        else:
-            selected_names = []
-    else:
-        selected_names = []
-
-    try:
-        ideas = generate_ideas(num_ideas=num_ideas, selected_names=selected_names)
-        logger.debug(f"{len(ideas)} ideas generated successfully.")
-    except Exception as e:
-        logger.error(f"Error during idea generation: {e}")
-        ideas = []
-    
-    yield ("IDEAS_RESULT", ideas)
-
-def handle_csv_upload(uploaded_file) -> None:
-    if uploaded_file is not None:
-        try:
-            logger.debug("Uploading CSV file to disk.")
-            with open(CSV_PATH, 'wb') as f:
-                f.write(uploaded_file.read())
-        except Exception as e:
-            logger.error(f"Failed to save uploaded CSV: {e}")
-            st.error(f"Failed to save uploaded CSV: {e}")
-            return
-
-        logger.debug("CSV file uploaded successfully. Attempting to load into DB.")
-        success, message = purge_and_load_csv(CSV_PATH)
-        if success:
-            st.success(message)
-        else:
-            st.error(message)
-
-def display_entries(entries_df: pd.DataFrame) -> None:
-    st.subheader("Available Entries")
-
-    if entries_df is None or entries_df.empty:
-        st.write("No entries available. Please upload a CSV.")
-        return
-
-    st.markdown(
-        "<p style='color:gray;font-size:13px;'>If you do not select any rows, random APIs will be chosen for you. "
-        "Selected rows will be used for ideation and code generation. To avoid scrolling resets, select multiple rows first and then click 'Submit Selections'.</p>",
-        unsafe_allow_html=True
-    )
-
-    if "display_df" not in st.session_state or \
-       st.session_state["display_df"].shape[0] != entries_df.shape[0]:
-        display_df = entries_df.copy().reset_index(drop=True)
-        if 'name' not in display_df.columns:
-            st.warning("No 'name' column found in entries. Please ensure CSV has a 'name' column.")
-            return
-        display_df.insert(0, 'Select', False)
-        st.session_state["display_df"] = display_df
-
-    with st.form("selection_form"):
-        edited_df = st.data_editor(
-            st.session_state["display_df"],
-            num_rows="dynamic",
-            use_container_width=True,
-            key="entries_editor"
-        )
-        submit = st.form_submit_button("Submit Selections")
-
-    if submit:
-        st.session_state["display_df"] = edited_df
-
-    selected_rows = st.session_state["display_df"][st.session_state["display_df"]["Select"]]
-    if not selected_rows.empty:
-        st.write("**Selected Entries:**")
-        styled_selected = selected_rows.style.apply(
-            lambda row: ['background-color: #A5D6A7' for _ in row],
-            axis=1
-        )
-        st.dataframe(styled_selected, use_container_width=True)
-    else:
-        st.write("No entries selected.")
 
 def display_ideas(ideas: List[dict]) -> None:
     st.subheader("Ideation Results")
