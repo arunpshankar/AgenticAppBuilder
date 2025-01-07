@@ -14,6 +14,7 @@ CSV_PATH: str = os.path.join(DATA_DIR, 'apis.csv')
 IMAGES_DIR: str = os.path.join(PROJECT_ROOT, 'img')
 GOOGLE_ICON_PATH: str = os.path.join(IMAGES_DIR, 'google_logo.svg')
 TEMPLATES_DIR: str = os.path.join(PROJECT_ROOT, 'templates')
+MODEL = "gemini-2.0-flash-exp"
 
 # Global Engine variable
 engine: Engine
