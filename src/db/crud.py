@@ -4,7 +4,9 @@ from src.config.logging import logger
 from src.config.setup import DB_PATH
 from src.config.setup import engine
 from sqlalchemy import text
-from typing import Tuple, List, Dict
+from typing import Tuple
+from typing import List 
+from typing import Dict 
 import pandas as pd
 import os
 
