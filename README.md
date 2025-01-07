@@ -2,6 +2,8 @@
 
 **A multi-agent framework that collaboratively ideates and constructs lightweight web applications, leveraging a curated set of public APIs, powered by Google Cloud Platform and Gemini.**
 
+![Agentic Search Overview](./img/agentic-app-builder.png)
+
 ## Overview
 
 AgenticAppBuilder is a cutting-edge framework designed to dynamically create lightweight web applications through multi-agent collaboration. Leveraging **Google Cloud Platform (GCP)** and **Gemini's advanced generative AI capabilities**, the framework intelligently ideates, delegates tasks, and seamlessly integrates APIs to deliver rapid and efficient application development.
