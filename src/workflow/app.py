@@ -1,5 +1,4 @@
 from src.config.setup import GOOGLE_ICON_PATH
-from src.config.setup import PROJECT_ROOT
 from src.config.logging import logger 
 from src.db.crud import get_entries 
 from src.workflow.helper import * 
@@ -93,7 +92,6 @@ def run() -> None:
             st.write("No generated apps available yet.")
 
         if "run_error" in st.session_state:
-            app_name_slug = st.session_state["run_error"]["app_name_slug"]
             error_message = st.session_state["run_error"]["error_message"]
             st.error(f"Error running the app: {error_message}")
 

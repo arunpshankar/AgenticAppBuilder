@@ -3,7 +3,6 @@ from src.llm.generate import build_app_code
 from src.llm.generate import generate_ideas
 from src.db.crud import purge_and_load_csv  
 from src.config.setup import PROJECT_ROOT
-from src.utils.io import save_app_code 
 from src.config.setup import CSV_PATH 
 from src.config.logging import logger
 from typing import Generator
@@ -279,6 +278,7 @@ def build_app_for_idea(idea: Dict, selected_entries: pd.DataFrame) -> str:
         app_name = idea['title']
         app_name_slug = app_name.lower().replace(" ", "_").replace("-", "_")
         apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
+        print(f"PROJECT_ROOT = {PROJECT_ROOT}")
 
         os.makedirs(apps_dir, exist_ok=True)
         logger.info(f"Created or verified app directory: {apps_dir}")
@@ -335,10 +335,35 @@ def build_selected_apps(selected_ideas: List[dict]) -> None:
         logger.info("All selected apps were built successfully.")
 
         load_available_apps()
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         logger.error(f"Error building the app(s): {e}")
         st.error(f"An error occurred while building the app(s): {e}")
+
+
+def save_app_code(app_name_slug: str, frontend_code: str, backend_code: str) -> None:
+    """
+    Save the generated frontend and backend code to the appropriate location.
+
+    Args:
+        app_name_slug (str): The slugified app name.
+        frontend_code (str): The frontend code as a string.
+        backend_code (str): The backend code as a string.
+    """
+    apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
+    os.makedirs(apps_dir, exist_ok=True)
+
+    frontend_path = os.path.join(apps_dir, 'frontend.py')
+    backend_path = os.path.join(apps_dir, 'backend.py')
+
+    try:
+        with open(frontend_path, 'w', encoding='utf-8') as f:
+            f.write(frontend_code)
+        with open(backend_path, 'w', encoding='utf-8') as f:
+            f.write(backend_code)
+        logger.info("App code saved to: %s and %s", frontend_path, backend_path)
+    except Exception as e:
+        logger.error("Failed to save app code: %s", e)
 
 
 def run_app(app_path: str) -> None:

@@ -87,31 +87,6 @@ def read_file(path: str) -> Optional[str]:
         return None
 
 
-def save_app_code(app_name_slug: str, frontend_code: str, backend_code: str) -> None:
-    """
-    Save the generated frontend and backend code to the appropriate location.
-
-    Args:
-        app_name_slug (str): The slugified app name.
-        frontend_code (str): The frontend code as a string.
-        backend_code (str): The backend code as a string.
-    """
-    apps_dir = os.path.join(PROJECT_ROOT, 'src', 'apps', app_name_slug)
-    os.makedirs(apps_dir, exist_ok=True)
-
-    frontend_path = os.path.join(apps_dir, 'frontend.py')
-    backend_path = os.path.join(apps_dir, 'backend.py')
-
-    try:
-        with open(frontend_path, 'w', encoding='utf-8') as f:
-            f.write(frontend_code)
-        with open(backend_path, 'w', encoding='utf-8') as f:
-            f.write(backend_code)
-        logger.info("App code saved to: %s and %s", frontend_path, backend_path)
-    except Exception as e:
-        logger.error("Failed to save app code: %s", e)
-
-
 def write_to_file(path: str, content: str) -> None:
     """
     Writes content to a specified file. Appends to the file if it already exists.

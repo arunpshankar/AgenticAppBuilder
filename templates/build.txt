@@ -39,7 +39,7 @@ No additional files or extraneous text should be included.
   - Gemini integration: 
     ```python
     from src.llm.gemini_text import generate_content
-    from src.config.client import initialize_genai_client
+    from src.config.setup import initialize_genai_client
 
     gemini_client = initialize_genai_client()
     MODEL_ID = "gemini-2.0-flash-exp"
@@ -70,7 +70,7 @@ def main():
 
 **Requirements:**
 - Use `requests` for external API calls.
-- Import `get_api_key` from `src.config.serp` to retrieve the SERP API key.
+- Import `get_serp_api_key` from `src.config.setup` to retrieve the SERP API key.
 - Implement API logic with proper error handling.
 - Return structured Python dictionaries suitable for frontend consumption.
 - No server implementations (like Flask or FastAPI).
@@ -78,7 +78,7 @@ def main():
 - Cache responses if appropriate, and validate data thoroughly.
 
 ```python
-from src.config.serp import get_api_key
+from src.config.setup import get_serp_api_key
 # Use get_api_key() to fetch the SERP API key
 ```
 
