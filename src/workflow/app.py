@@ -1,19 +1,19 @@
+from concurrent.futures import ThreadPoolExecutor 
 from src.config.setup import GOOGLE_ICON_PATH
-from src.llm.generate import generate_ideas, build_app_code
-from src.db.crud import purge_and_load_csv
-from src.config.setup import PROJECT_ROOT
-from src.utils.io import save_app_code
-from src.config.setup import CSV_PATH
-from src.config.logging import logger
-from src.db.crud import get_entries
-from typing import Generator, Union, Tuple, List
-import streamlit as st
-import pandas as pd
-import time
-import os
-import json
-import importlib.util
-from concurrent.futures import ThreadPoolExecutor
+from src.llm.generate import generate_ideas
+from src.llm.generate import build_app_code
+from src.db.crud import purge_and_load_csv  
+from src.config.setup import PROJECT_ROOT 
+from src.utils.io import save_app_code 
+from src.config.setup import CSV_PATH 
+from src.config.logging import logger 
+from src.db.crud import get_entries 
+import importlib.util 
+import streamlit as st  
+from typing import Generator, Union, Tuple, List 
+import pandas as pd 
+import time  
+import os 
 
 def load_available_apps():
     apps_base_dir = os.path.join(PROJECT_ROOT, 'src', 'apps')
