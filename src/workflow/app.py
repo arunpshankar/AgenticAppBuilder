@@ -1,3 +1,4 @@
+from src.workflow.helper import load_available_apps
 from concurrent.futures import ThreadPoolExecutor 
 from src.config.setup import GOOGLE_ICON_PATH
 from src.llm.generate import generate_ideas
@@ -8,26 +9,16 @@ from src.utils.io import save_app_code
 from src.config.setup import CSV_PATH 
 from src.config.logging import logger 
 from src.db.crud import get_entries 
+from typing import Generator
+from typing import Union
+from typing import Tuple 
+from typing import List 
+import streamlit as st 
 import importlib.util 
-import streamlit as st  
-from typing import Generator, Union, Tuple, List 
 import pandas as pd 
 import time  
 import os 
 
-def load_available_apps():
-    apps_base_dir = os.path.join(PROJECT_ROOT, 'src', 'apps')
-    if "available_apps" not in st.session_state:
-        st.session_state["available_apps"] = {}
-    st.session_state["available_apps"].clear()
-
-    if os.path.exists(apps_base_dir):
-        for entry in os.listdir(apps_base_dir):
-            d_path = os.path.join(apps_base_dir, entry)
-            if os.path.isdir(d_path):
-                frontend_path = os.path.join(d_path, "frontend.py")
-                if os.path.exists(frontend_path):
-                    st.session_state["available_apps"][entry] = os.path.relpath(frontend_path, start='.')
 
 def run_ideation(num_ideas: int = 3) -> Generator[Union[str, Tuple[str, List[dict]]], None, None]:
     steps = [
