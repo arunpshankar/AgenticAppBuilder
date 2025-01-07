@@ -1,4 +1,4 @@
-from src.config.client import initialize_genai_client
+from src.config.setup import initialize_genai_client
 from llm.gemini_text import generate_content
 from sqlalchemy.engine.base import Engine
 from src.config.logging import logger
@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from typing import Dict, List, Generator
 import pandas as pd
 import time
+
 
 def run_ideation(engine: Engine) -> Generator[str | tuple[str, List[Dict]], None, None]:
     """
@@ -34,6 +35,7 @@ def run_ideation(engine: Engine) -> Generator[str | tuple[str, List[Dict]], None
 
     ideas = generate_ideas_with_llm(engine, num_ideas=3)
     yield "IDEAS_RESULT", ideas
+
 
 def generate_ideas_with_llm(engine: Engine, num_ideas: int = 3) -> List[Dict]:
     """
@@ -68,6 +70,7 @@ def generate_ideas_with_llm(engine: Engine, num_ideas: int = 3) -> List[Dict]:
             "apis_used": []
         }]
 
+
 def fetch_db_entries(engine: Engine) -> List[Dict]:
     """
     Retrieve API entries from the 'apientry' table in the database.
@@ -95,6 +98,7 @@ def fetch_db_entries(engine: Engine) -> List[Dict]:
     except Exception as e:
         logger.error("Failed to fetch entries from the database: %s", e)
         return []
+
 
 def construct_llm_prompt(entries: List[Dict], num_ideas: int) -> str:
     """
@@ -126,6 +130,7 @@ Return your answer as a JSON list, where each element is a dictionary with keys:
 
     logger.debug("Constructed LLM prompt.")
     return prompt
+
 
 if __name__ == '__main__':
     try:
