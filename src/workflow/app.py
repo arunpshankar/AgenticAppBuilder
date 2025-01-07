@@ -1,4 +1,5 @@
 from src.config.setup import GOOGLE_ICON_PATH
+from src.config.setup import PROJECT_ROOT
 from src.config.logging import logger 
 from src.db.crud import get_entries 
 from src.workflow.helper import * 

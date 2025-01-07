@@ -1,9 +1,6 @@
 from src.config.logging import logger
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-import os
-
-
 from src.utils.io import load_yaml
 from google import genai
 from typing import Dict
