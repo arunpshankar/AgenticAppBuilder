@@ -5,7 +5,6 @@ from src.workflow.helper import *
 import streamlit as st 
 import os 
 
-
 def run() -> None:
     """
     Main entry point for the Agentic App Builder Streamlit application. Sets up the page configuration,
@@ -102,9 +101,6 @@ def run() -> None:
     uploaded_file = st.file_uploader("Select your CSV file", type=['csv'])
     handle_csv_upload(uploaded_file)
 
-    logs_expander = st.expander("Logs / Traces", expanded=False)
-    logs_container = logs_expander.empty()
-
     if refresh_trigger:
         try:
             st.session_state["entries_df"] = get_entries()
@@ -126,14 +122,12 @@ def run() -> None:
         })
 
         st.info("Ideation process started...")
-        logs_area = logs_container.empty()
 
         for step in run_ideation():
             if isinstance(step, tuple) and step[0] == "IDEAS_RESULT":
                 st.session_state["ideas"] = step[1]
             else:
                 st.session_state["logs"].append(step)
-                logs_area.write("\n".join(map(str, st.session_state["logs"])))
 
         if st.session_state["ideas"]:
             st.success("Ideas generated!")
@@ -156,7 +150,6 @@ def run() -> None:
         st.subheader("Your App(s) are Ready!")
         st.markdown("The generated code has been saved in the `./src/apps/<app_name>/` directories.")
         st.markdown("You can now select them from the sidebar to run them inline.")
-
 
 if __name__ == "__main__":
     try:

@@ -27,35 +27,74 @@ def validate_csv(df: pd.DataFrame) -> Tuple[bool, str]:
 def purge_and_load_csv(csv_path: str) -> Tuple[bool, str]:
     """
     Drop the existing 'apientry' table (if it exists) and load the CSV file data into it.
+    
+    Args:
+        csv_path (str): Path to the CSV file to be loaded.
+
+    Returns:
+        Tuple[bool, str]: Success status and message.
     """
     logger.debug("Attempting to load CSV from path: %s", csv_path)
 
-    # Step 1: Read the CSV
+    # Step 1: Validate CSV file path
+    if not os.path.exists(csv_path):
+        logger.error("CSV file not found at path: %s", csv_path)
+        return False, f"CSV file not found: {csv_path}"
+
+    # Step 2: Read the CSV
     try:
         df = pd.read_csv(csv_path)
+        if df.empty:
+            logger.error("CSV file is empty: %s", csv_path)
+            return False, "CSV file is empty."
+        logger.debug("CSV file read successfully. Rows: %d, Columns: %d", df.shape[0], df.shape[1])
     except Exception as e:
         logger.error("Failed to read CSV file: %s", e)
         return False, f"Error reading CSV file: {e}"
 
-    # Step 2: Validate the CSV structure
+    # Step 3: Validate the CSV structure
     is_valid, validation_msg = validate_csv(df)
     if not is_valid:
         logger.error("CSV validation failed: %s", validation_msg)
         return False, validation_msg
 
-    # Step 3: Reload the data into the database
+    # Step 4: Ensure the database exists or create it
     try:
-        with engine.connect() as conn:
+        if not os.path.exists(DB_PATH):
+            logger.warning("Database file not found at path: %s. Creating a new database.", DB_PATH)
+            # Initialize the database by creating the 'apientry' table
+            with engine.begin() as conn:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS apientry (
+                        name TEXT,
+                        category TEXT,
+                        base_url TEXT,
+                        endpoint TEXT,
+                        description TEXT,
+                        query_parameters TEXT,
+                        example_request TEXT,
+                        example_response TEXT
+                    )
+                """))
+                logger.info("New database and 'apientry' table initialized.")
+    except Exception as e:
+        logger.error("Failed to create or initialize the database: %s", e)
+        return False, f"Database initialization error: {e}"
+
+    # Step 5: Reload the data into the database
+    try:
+        with engine.begin() as conn:  # Use a transaction to ensure atomicity
             logger.debug("Dropping existing 'apientry' table if it exists.")
             conn.execute(text("DROP TABLE IF EXISTS apientry"))
+
             logger.debug("Inserting new data into 'apientry' table.")
-        
-        df.to_sql('apientry', con=engine, if_exists='replace', index=False)
-        logger.info("CSV successfully loaded into the database.")
+            df.to_sql('apientry', con=conn, if_exists='replace', index=False)
+
+        logger.info("CSV successfully loaded into the database at: %s", DB_PATH)
         return True, "CSV uploaded and database reloaded successfully!"
 
     except OperationalError as oe:
-        logger.error("Database operational error: %s", oe)
+        logger.error("Database operational error on path %s: %s", DB_PATH, oe)
         return False, f"Database operational error: {oe}"
 
     except SQLAlchemyError as sqle:
