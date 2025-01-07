@@ -109,25 +109,6 @@ The framework leverages a multi-agent architecture powered by GCP and Gemini:
 - **Testing Agent**: Validates the application’s functionality.
 - **GCP Services**: Orchestrates and deploys the application on Cloud Run, Vertex AI, and other GCP tools.
 
-## Folder Structure
-
-```
-AgenticAppBuilder/
-├── src/
-│   ├── agents/
-│   │   ├── coordinator.py
-│   │   ├── frontend_agent.py
-│   │   ├── backend_agent.py
-│   │   └── testing_agent.py
-│   ├── utils/
-│   ├── templates/
-│   └── app.py
-├── data/
-├── .env
-├── requirements.txt
-└── README.md
-```
-
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
