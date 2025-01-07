@@ -1,4 +1,4 @@
-from src.config.client import initialize_genai_client
+from src.config.setup import initialize_genai_client
 from src.db.crud import fetch_db_entries_by_names
 from src.llm.gemini_text import generate_content
 from src.config.setup import TEMPLATES_DIR
