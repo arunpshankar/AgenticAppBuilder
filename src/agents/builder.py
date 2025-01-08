@@ -5,7 +5,9 @@ from src.config.setup import TEMPLATES_DIR
 from src.db.crud import fetch_db_entries
 from src.config.logging import logger
 from src.config.setup import MODEL
-from typing import Tuple, Dict, List
+from typing import Tuple
+from typing import Dict 
+from typing import List 
 import pandas as pd
 import random
 import re

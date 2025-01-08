@@ -2,8 +2,11 @@ from src.config.setup import initialize_genai_client
 from llm.gemini_text import generate_content
 from sqlalchemy.engine.base import Engine
 from src.config.logging import logger
-from sqlalchemy import create_engine, text
-from typing import Dict, List, Generator
+from sqlalchemy import create_engine
+from typing import Generator
+from sqlalchemy import text 
+from typing import Dict
+from typing import List 
 import pandas as pd
 
 
