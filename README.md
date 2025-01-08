@@ -6,7 +6,7 @@
 
 ## Overview
 
-AgenticAppBuilder is a cutting-edge framework designed to dynamically create lightweight web applications through multi-agent collaboration. Leveraging **Google Cloud Platform (GCP)** and **Gemini's advanced generative AI capabilities**, the framework intelligently ideates, delegates tasks, and seamlessly integrates APIs to deliver rapid and efficient application development.
+AgenticAppBuilder is an agentic framework designed to dynamically create lightweight web applications through multi-agent collaboration. Leveraging **Google Cloud Platform (GCP)** and **Gemini's advanced generative AI capabilities**, the framework intelligently ideates, delegates tasks, and seamlessly integrates APIs to deliver rapid and efficient application development.
 
 ## Features
 
@@ -29,63 +29,94 @@ AgenticAppBuilder is a cutting-edge framework designed to dynamically create lig
 ### Prerequisites
 
 - **Python** 3.8 or higher
-- **GCP Account** with access to **Vertex AI** and **Cloud Run**
-- **Docker** (optional, for containerized deployment)
-- **Node.js** (for building web application frontends)
+
+#### Getting API Keys
+
+To utilize certain features, you'll need API keys from Gemini and SerpApi.
+
+#### Gemini API Key
+
+1. **Sign in to your Google Account**: Ensure you're logged in to your Google account.
+
+2. **Access Google AI Studio**: Navigate to [Google AI Studio](https://ai.google.dev/aistudio).
+
+3. **Obtain API Key**:
+   - Click on the **"Gemini API"** tab.
+   - Click the **"Get API Key in Google AI Studio"** button.
+   - Review and accept the terms of service.
+   - Choose to create the API key in a new or existing project.
+   - Your API key will be generated; store it securely.
+
+For detailed instructions, refer to [Google's official guide](https://ai.google.dev/gemini-api/docs/api-key).
+
+#### SerpApi API Key
+
+1. **Create an Account**: Sign up at [SerpApi](https://serpapi.com/users/sign_up).
+
+2. **Access Dashboard**: After logging in, go to the [dashboard](https://serpapi.com/dashboard).
+
+3. **Retrieve API Key**: Your private API key is displayed in the **"Your Private API Key"** section. Copy and store it securely.
+
+For more information, visit [SerpApi's documentation](https://serpapi.com/search-api).
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/<your-username>/AgenticAppBuilder.git
+   git clone https://github.com/arunpshankar/AgenticAppBuilder.git
    cd AgenticAppBuilder
    ```
 
-2. Install dependencies:
+2. **Create and Activate a Virtual Environment**:
+   - **Create**:
+     ```bash
+     python -m venv venv
+     ```
+   - **Activate**:
+     - **Windows**:
+       ```bash
+       venv\Scripts\activate
+       ```
+     - **macOS and Linux**:
+       ```bash
+       source venv/bin/activate
+       ```
+
+3. **Upgrade pip**:
+   ```bash
+   pip install --upgrade pip
+   ```
+
+4. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Set up GCP credentials:
-   - Download your GCP service account key file.
-   - Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable:
+5. **Set Environment Variables**:
+   ```bash
+   export PYTHONDONTWRITEBYTECODE=1
+   export PYTHONPATH=$PYTHONPATH:.
+   ```
+
+6. **Configure API Keys**:
+   - Create a folder named `credentials` inside the cloned project:
      ```bash
-     export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/key.json"
+     mkdir credentials
      ```
+   - Inside the `credentials` folder, create a YAML file named `api.yml` with the following content:
+     ```yaml
+     GOOGLE_API_KEY: your_gemini_api_key
+     SERP_API_KEY: your_serpapi_api_key
+     ```
+   Replace `your_gemini_api_key` and `your_serpapi_api_key` with the API keys you obtained earlier.
 
-4. Set up `.env` for Gemini and API keys:
-   Create a `.env` file in the root directory and add required keys:
+7. **Run the Application**:
    ```bash
-   GEMINI_API_KEY=<Your-Gemini-API-Key>
-   API_KEY_1=<Your-API-Key>
+   streamlit run src/workflow/app.py
    ```
 
-5. Run the application:
-   ```bash
-   python app.py
-   ```
+By following these steps, you'll set up the AgenticAppBuilder project with the necessary configurations and API integrations. 
 
-### GCP Deployment
-
-For production use, deploy the application on GCP:
-
-1. **Dockerize the application**:
-   ```bash
-   docker build -t gcr.io/<your-project-id>/agentic-app-builder .
-   ```
-
-2. **Push to Google Container Registry**:
-   ```bash
-   docker push gcr.io/<your-project-id>/agentic-app-builder
-   ```
-
-3. **Deploy to Cloud Run**:
-   ```bash
-   gcloud run deploy agentic-app-builder \
-       --image gcr.io/<your-project-id>/agentic-app-builder \
-       --platform managed \
-       --region <your-region>
-   ```
 
 ### Demo
 
@@ -126,9 +157,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 For queries or collaborations, please contact [Your Name](mailto:arunpshankar@google.com).
-
-
-
-
-export PYTHONDONTWRITEBYTECODE=1
-export PYTHONPATH=$PYTHONPATH:.
