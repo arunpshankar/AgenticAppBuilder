@@ -5,7 +5,6 @@ from src.config.logging import logger
 from sqlalchemy import create_engine, text
 from typing import Dict, List, Generator
 import pandas as pd
-import time
 
 
 def run_ideation(engine: Engine) -> Generator[str | tuple[str, List[Dict]], None, None]:
@@ -21,18 +20,6 @@ def run_ideation(engine: Engine) -> Generator[str | tuple[str, List[Dict]], None
         - str: Log messages for each step of the process.
         - tuple: ("IDEAS_RESULT", ideas), where ideas is a list of dictionaries.
     """
-    steps = [
-        "Initiating ideation process...",
-        "Analyzing available APIs from the database...",
-        "Formulating a prompt for Gemini LLM...",
-        "Asking Gemini for innovative API combination ideas...",
-        "Finalizing ideas..."
-    ]
-
-    for step in steps:
-        yield step
-        time.sleep(1)
-
     ideas = generate_ideas_with_llm(engine, num_ideas=3)
     yield "IDEAS_RESULT", ideas
 
