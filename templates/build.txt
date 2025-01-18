@@ -37,7 +37,7 @@ No additional files or extraneous text should be included.
 - Display results in a user-friendly format.
 - Use Gemini to prettify and format JSON responses.  
   - Gemini integration: 
-    ```python
+
     from src.llm.gemini_text import generate_content
     from src.config.setup import initialize_genai_client
 
@@ -47,14 +47,12 @@ No additional files or extraneous text should be included.
     def process_with_gemini(prompt: str) -> str:
         response = generate_content(gemini_client, MODEL_ID, prompt)
         return response.text
-    ```
 
 **UI Guidelines:**
-- No `use_column_width`; use `use_container_width` for layout elements.
+- Strictly DO NOT use `use_column_width`or use `use_container_width` for layout elements.
 - Handle JSON data with appropriate error handling.
 - Provide a top-level `main()` function that configures the UI and handles user interactions.
 
-```python
 def main():
     """
     Primary entry point for the Streamlit application.
@@ -64,7 +62,6 @@ def main():
     - Process and display data from backend
     - Format JSON responses using Gemini
     """
-```
 
 ## Backend (`backend.py`)
 
@@ -77,10 +74,8 @@ def main():
 - Include comprehensive docstrings and comments.
 - Cache responses if appropriate, and validate data thoroughly.
 
-```python
 from src.config.setup import get_serp_api_key
 # Use get_api_key() to fetch the SERP API key
-```
 
 **API Interaction Guidelines:**
 - Validate responses from the external API.
@@ -94,7 +89,6 @@ from src.config.setup import get_serp_api_key
 ## Response Format
 Your response must follow this structure exactly:
 
-```
 ---BEGIN FRONTEND CODE---
 [Complete frontend.py code here, starting with imports, no extra text]
 ---END FRONTEND CODE---
@@ -102,7 +96,6 @@ Your response must follow this structure exactly:
 ---BEGIN BACKEND CODE---
 [Complete backend.py code here, starting with imports, no extra text]
 ---END BACKEND CODE---
-```
 
 ## Important Considerations
 1. Focus on maintainable, well-documented code
@@ -125,62 +118,6 @@ Your response must follow this structure exactly:
 * No markdown artifacts in generated code
 
 ### Example: Correct vs Incorrect Code Generation
-
-❌ INCORRECT (with floating text and backticks):
-```
-python
-```python
-import streamlit as st
-```
-def main():
-    st.title("My App")
-```
-
-✅ CORRECT:
-```
----BEGIN FRONTEND CODE---
-import streamlit as st
-from typing import Dict, List
-from src.apps.weather_app import backend
-
-def main():
-    st.title("My App")
-    
-if __name__ == "__main__":
-    main()
----END FRONTEND CODE---
-```
-
-❌ INCORRECT (with stray backticks and comments outside code):
-```
-This is a weather app
-`
-import streamlit as st
-# This is the main function
-`
-def main():
-    st.title("Weather App")
-```
-
-✅ CORRECT:
-```
----BEGIN FRONTEND CODE---
-import streamlit as st
-from typing import Dict, List
-from src.apps.weather_app import backend
-
-def main():
-    """
-    Main function for the Weather App interface.
-    Handles user input and displays weather data.
-    """
-    st.title("Weather App")
-    
-if __name__ == "__main__":
-    main()
----END FRONTEND CODE---
-```
-
 ❌ INCORRECT imports (external dependency dotenv in imports):
 import requests
 from typing import Dict, Optional
@@ -191,65 +128,6 @@ import requests
 from typing import Dict, Optional
 from geopy.geocoders import Nominatim
 
-❌ INCORRECT
-```
----BEGIN FRONTEND CODE---
-import streamlit as st
-from typing import Dict, List
-from src.apps.weather_app import backend
 
-def main():
-    """
-    Main function for the Weather App interface.
-    Handles user input and displays weather data.
-    """
-    st.title("Weather App")
-    
-if __name__ == "__main__":
-    main()
----END FRONTEND CODE---
-`
-```
-
-❌ INCORRECT
-```
-`
----BEGIN FRONTEND CODE---
-import streamlit as st
-from typing import Dict, List
-from src.apps.weather_app import backend
-
-def main():
-    """
-    Main function for the Weather App interface.
-    Handles user input and displays weather data.
-    """
-    st.title("Weather App")
-    
-if __name__ == "__main__":
-    main()
----END FRONTEND CODE---
-`
-```
-
-
-
-❌ INCORRECT
-```
-`
----BEGIN FRONTEND CODE---
-import streamlit as st
-from typing import Dict, List
-from src.apps.weather_app import backend
-
-def main():
-    """
-    Main function for the Weather App interface.
-    Handles user input and displays weather data.
-    """
-    st.title("Weather App")
-    
-if __name__ == "__main__":
-    main()
----END FRONTEND CODE---
-```
+IMPORTANT: FORMAT JSON DATA APPROPRIATELY IN THE STREAMLIT UI INSTEAD OF DISPLAYING RAW JSON.
+AVOID USING ``` AT ALL COST WHEN GENERATING CODE 
