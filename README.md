@@ -1,28 +1,12 @@
 # AgenticAppBuilder
 
-**A multi-agent framework that collaboratively ideates and constructs lightweight web applications, leveraging a curated set of public APIs, powered by Google Cloud Platform and Gemini.**
+**A multi-agent workflow that lets you ideate and construct lightweight web applications, leveraging a curated set of public APIs, powered by Google Cloud Platform and Gemini.**
 
 ![Agentic Search Overview](./img/agentic-app-builder.png)
 
 ## Overview
 
-AgenticAppBuilder is an agentic framework designed to dynamically create lightweight web applications through multi-agent collaboration. Leveraging **Google Cloud Platform (GCP)** and **Gemini's advanced generative AI capabilities**, the framework intelligently ideates, delegates tasks, and seamlessly integrates APIs to deliver rapid and efficient application development.
-
-## Features
-
-- **Powered by GCP**: Scalable infrastructure with seamless deployment and integration of GCP services like **Cloud Functions**, **Vertex AI**, and **Cloud Run**.
-- **Gemini Integration**: Uses Gemini for natural language understanding, code generation, and task orchestration.
-- **Multi-Agent Collaboration**: Intelligent agents collaborate on frontend, backend, and testing tasks.
-- **Curated API Library**: Includes a preselected set of high-quality public APIs.
-- **Lightweight Applications**: Builds minimal, scalable, and efficient web tools.
-- **Extensible Design**: Easily integrate additional APIs or extend agent capabilities to suit specific needs.
-
-## Use Cases
-
-- Rapid prototyping of web applications.
-- Automating the ideation and creation of lightweight tools.
-- Enhancing application design with AI-driven agent collaboration.
-- Education and exploration of multi-agent frameworks.
+AgenticAppBuilder is an agentic setup designed to dynamically create lightweight web (Streamlit) applications through multi-agent collaboration. Leveraging Google Cloud Platform (GCP) and Gemini's advanced generative AI capabilities, the tool can help you intelligently ideate, delegate tasks, and seamlessly integrate APIs to deliver rapid and efficient application development. The system includes a curated API library with preselected APIs and offers an extensible design that allows easy integration of additional APIs or extension of agent capabilities to suit specific needs.
 
 ## Getting Started
 
@@ -117,9 +101,10 @@ For more information, visit [SerpApi's documentation](https://serpapi.com/search
 By following these steps, you'll set up the AgenticAppBuilder project with the necessary configurations and API integrations. 
 
 
-### Demo
+### User Interface 
 
-[Insert GIF or screenshots of the application workflow, including deployment on GCP]
+how to get started with the UI
+![UI Landing](./img/landing.png)
 
 ## Usage
 
@@ -156,3 +141,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 For queries or collaborations, please contact [Your Name](mailto:arunpshankar@google.com).
+
+
+
+
+
+
