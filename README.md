@@ -130,6 +130,13 @@ ensuring frontend leverages thebackedn
 
 ![UI Landing](./img/app-loading-side.png)
 
+the apps after built are deployed to localhost and will start showing in the side panel 
+the app can also be opened in full screen 
+
+$ streamlit run ./src/apps/<app_name>frontend.py
+
+![UI Landing](./img/full-view.png)
+
 
 
 
