@@ -53,7 +53,7 @@ def display_product_results(product_results):
 
     shopping_results = product_results['shopping_results'][:5]
     if shopping_results:
-        st.subheader("Top 5 Products:")
+        st.subheader("Top 5 Related Products:")
         for result in shopping_results:
             # Thumbnail
             thumbnail_url = result.get('thumbnail', '')
@@ -62,7 +62,6 @@ def display_product_results(product_results):
 
             # Product details
             st.markdown(f"<span style='font-size:14px;'>**Price:** {result.get('price', 'N/A')}</span>", unsafe_allow_html=True)
-            st.markdown(f"<span style='font-size:14px;'>{result.get('description', 'N/A')}</span>", unsafe_allow_html=True)
             st.markdown(f"<span style='font-size:14px;'><a href='{result.get('link', 'N/A')}'>Product Link</a></span>", unsafe_allow_html=True)  # Using 'product_link'
 
             st.markdown("---")

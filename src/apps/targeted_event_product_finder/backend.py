@@ -120,7 +120,6 @@ def search_products_for_event(events: List[Dict], event_query: str) -> Optional[
                "title": _safe_get(result, ['title'], 'N/A'),
                "price": _safe_get(result, ['price'], 'N/A'),
                "link": _safe_get(result, ['product_link'], 'N/A'),
-               "description": _safe_get(result, ['description'], 'N/A'),
                "thumbnail": _safe_get(result, ['thumbnail'], 'N/A')
 
             }
