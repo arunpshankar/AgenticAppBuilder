@@ -109,7 +109,28 @@ By following these steps, you'll set up the AgenticAppBuilder project with the n
 ### User Interface 
 
 how to get started with the UI
+
+thisis landing page where you get started
+the system preloads all apis and related info needed
+api indivudal is a tool here equivalnt 
+we need to click on ideate 
 ![UI Landing](./img/landing.png)
+
+hititing this button ideate randomly picks 3 to 4 apis (tools) here and trigers ideautin agent that makes use of the selectons and starts ideationing on ideas 
+the ideas are displayed in the imaef brlow 
+
+
+![UI Landing](./img/random-ideas.png)
+
+we can then select on oneor more of the ideas and hit build 
+this kicks of the app builing ptrocess 
+builder agent takes over and starts building the frontend and backend of the wen app (stealit)
+buildree for each app it is buiding it knows the combinaions of apis (tools) ot needsto use and how to put it together right order 
+ensuring frontend leverages thebackedn 
+
+![UI Landing](./img/app-loading-side.png)
+
+
 
 
 ## Contributing
