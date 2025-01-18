@@ -12,9 +12,10 @@ AgenticAppBuilder is an agentic setup designed to dynamically create lightweight
   <img src="./img/arch.png" alt="Architecture" style="max-width: 100%;"/>
   <p><strong>Click on the image to enlarge</strong></p>
 </div>
+
 ## Getting Started
 
-### Prerequisites
+#### Prerequisites
 
 - **Python** 3.8 or higher
 
