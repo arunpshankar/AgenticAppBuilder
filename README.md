@@ -8,8 +8,10 @@
 
 AgenticAppBuilder is an agentic setup designed to dynamically create lightweight web (Streamlit) applications through multi-agent collaboration. Leveraging Google Cloud Platform (GCP) and Gemini's advanced generative AI capabilities, the tool can help you intelligently ideate, delegate tasks, and seamlessly integrate APIs to deliver rapid and efficient application development. The system includes a curated API library with preselected APIs and offers an extensible design that allows easy integration of additional APIs or extension of agent capabilities to suit specific needs.
 
-![architecture](./img/arch.png)
-<p style="text-align:center;">Click on the image to enlarge</p>
+<div align="center">
+  <img src="./img/arch.png" alt="Architecture" style="max-width: 100%;"/>
+  <p><strong>Click on the image to enlarge</strong></p>
+</div>
 ## Getting Started
 
 ### Prerequisites
