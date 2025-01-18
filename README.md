@@ -106,57 +106,73 @@ For more information, visit [SerpApi's documentation](https://serpapi.com/search
 By following these steps, you'll set up the AgenticAppBuilder project with the necessary configurations and API integrations. 
 
 
-### User Interface 
+### User Interface Overview
 
-how to get started with the UI
+#### Getting Started
 
-thisis landing page where you get started
-the system preloads all apis and related info needed
-api indivudal is a tool here equivalnt 
-we need to click on ideate 
-![Step 1](./img/landing.png)
+The landing page provides an intuitive entry point to the system. Upon loading, all required APIs and their associated information are preloaded, ensuring a seamless user experience. 
 
-hititing this button ideate randomly picks 3 to 4 apis (tools) here and trigers ideautin agent that makes use of the selectons and starts ideationing on ideas 
-the ideas are displayed in the imaef brlow 
+- **API Registry:** Represented as tools in the system, these are the building blocks of the applications.
+- **"Ideate" Button:** Clicking this button randomly selects 3–4 APIs (tools) and triggers the **Ideation Agent**. This agent uses the selected APIs to brainstorm and generate ideas for potential applications.
 
+![Step 1: Landing Page](./img/landing.png)
 
-![Step 2](./img/random-ideas.png)
+---
 
-we can then select on oneor more of the ideas and hit build 
-this kicks of the app builing ptrocess 
-builder agent takes over and starts building the frontend and backend of the wen app (stealit)
-buildree for each app it is buiding it knows the combinaions of apis (tools) ot needsto use and how to put it together right order 
-ensuring frontend leverages thebackedn 
+#### Step 1: Ideation Process
 
-![Step 3](./img/build.png)
-here is an other example 
-![Step 3](./img/app-loading-side.png)
+Hitting the "Ideate" button initiates the ideation process, during which the system generates application ideas based on the selected APIs. These ideas are displayed dynamically in the section below.
 
-the apps after built are deployed to localhost and will start showing in the side panel 
-the app can also be opened in full screen 
+![Step 2: Generated Ideas](./img/random-ideas.png)
 
-$ streamlit run ./src/apps/<app_name>frontend.py
+---
 
+#### Step 2: Building Applications
 
-## Example Runs 
+Once ideas are displayed, users can select one or more ideas and click **"Build"**. This action launches the **Builder Agent**, which orchestrates the creation of the application. 
 
-lets look at some of the apps created by agents 
-![cat fact enricher](./img/cat-fact.png)
+- The Builder Agent constructs both the frontend and backend of the application (using **Streamlit**), ensuring seamless integration between components.
+- The agent is aware of the required API combinations and the sequence of operations necessary to build the application effectively.
 
+![Step 3: Building the Application](./img/build.png)
 
-![local business investment analyzer](./img/local-business.png)
+Another example of the application-building process is shown below:
 
+![Step 3: Alternate Build View](./img/app-loading-side.png)
 
-![review-analyzer](./img/review-analyzer.png)
+---
 
+#### Step 3: Deploying Applications
 
-![products and events](./img/products-events.png)
-![related products](./img/related-products.png)
+Once built, the applications are deployed locally and appear in the side panel for easy access. They can also be opened in full-screen mode for a better experience.
 
+To run the application locally:
+```bash
+streamlit run ./src/apps/<app_name>frontend.py
+```
 
+#
 
+### Example Applications
 
+Below are some examples of applications created by the system:
 
+- **Cat Fact Enricher:** Enriches cat facts with related information and visuals.
+  ![Cat Fact Enricher](./img/cat-fact.png)
+
+- **Local Business Investment Analyzer:** Evaluates and analyzes investment opportunities for local businesses.
+  ![Local Business Investment Analyzer](./img/local-business.png)
+
+- **Review Analyzer:** Analyzes customer reviews to extract meaningful insights.
+  ![Review Analyzer](./img/review-analyzer.png)
+
+- **Products and Events:** Lists products and events, providing context-based recommendations.
+  ![Products and Events](./img/products-events.png)
+
+- **Related Products:** Identifies and displays related products for a given input.
+  ![Related Products](./img/related-products.png)
+
+#
 
 ## Contributing
 
