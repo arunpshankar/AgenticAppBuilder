@@ -157,12 +157,6 @@ streamlit run ./src/apps/<app_name>frontend.py
 
 #
 
-### Example Applications
-
-Here’s a polished and clean version of the content for a README file:  
-
----
-
 # Applications  
 
 Below are examples of sample applications created by the Agentic system.
@@ -173,7 +167,7 @@ This application fetches a random cat fact from the Cat Fact API and enriches it
 ![Cat Fact Enricher](./img/cat-fact.png)  
 **Internal Reference:** [./src/apps/visual_cat_fact_enrichment](./src/apps/visual_cat_fact_enrichment)  
 
----
+#
 
 ### **Image Source Verification**  
 This app fetches a random cat fact from the Cat Fact API and searches for a related image using the SERP API. It combines the results into a single, consolidated response.  
@@ -181,7 +175,7 @@ This app fetches a random cat fact from the Cat Fact API and searches for a rela
 ![Image Source Verification](./img/image-source-verify.png)  
 **Internal Reference:** [./src/apps/image_source_verification](./src/apps/image_source_verification)  
 
----
+#
 
 ### **Local Business Investment Analyzer**  
 This application orchestrates API calls to gather local business information, detailed business data, and financial data using SERP API endpoints. The results are structured into a cohesive and actionable response.  
@@ -189,7 +183,7 @@ This application orchestrates API calls to gather local business information, de
 ![Local Business Investment Analyzer](./img/local-business.png)  
 **Internal Reference:** [./src/apps/local_business_investment](./src/apps/local_business_investment)  
 
----
+#
 
 ### **Review Analyzer**  
 The Review Analyzer performs product searches across various platforms, including Google Shopping, Walmart, Google Search, and Google Local, using the SERP API. It consolidates functionality into reusable methods, ensuring flexibility for multiple search engines.  
@@ -197,7 +191,7 @@ The Review Analyzer performs product searches across various platforms, includin
 ![Review Analyzer](./img/review-analyzer.png)  
 **Internal Reference:** [./src/apps/product_review_analyzer](./src/apps/product_review_analyzer)  
 
----
+#
 
 ### **Products and Events**  
 This application utilizes the SERP API to search for local events through the Google Events engine and related products via the Google Shopping engine. The results are formatted as a structured response with nested data.  
@@ -205,7 +199,7 @@ This application utilizes the SERP API to search for local events through the Go
 ![Products and Events](./img/products-events.png)  
 **Internal Reference:** [./src/apps/targeted_event_product_finder](./src/apps/targeted_event_product_finder)  
 
----
+#
 
 ### How to Use  
 - Clone this repository to your local system.  
