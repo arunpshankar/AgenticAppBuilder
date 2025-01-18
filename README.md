@@ -114,13 +114,13 @@ thisis landing page where you get started
 the system preloads all apis and related info needed
 api indivudal is a tool here equivalnt 
 we need to click on ideate 
-![UI Landing](./img/landing.png)
+![Step 1](./img/landing.png)
 
 hititing this button ideate randomly picks 3 to 4 apis (tools) here and trigers ideautin agent that makes use of the selectons and starts ideationing on ideas 
 the ideas are displayed in the imaef brlow 
 
 
-![UI Landing](./img/random-ideas.png)
+![Step 2](./img/random-ideas.png)
 
 we can then select on oneor more of the ideas and hit build 
 this kicks of the app builing ptrocess 
@@ -128,14 +128,22 @@ builder agent takes over and starts building the frontend and backend of the wen
 buildree for each app it is buiding it knows the combinaions of apis (tools) ot needsto use and how to put it together right order 
 ensuring frontend leverages thebackedn 
 
-![UI Landing](./img/app-loading-side.png)
+![Step 3](./img/build.png)
+here is an other example 
+![Step 3](./img/app-loading-side.png)
 
 the apps after built are deployed to localhost and will start showing in the side panel 
 the app can also be opened in full screen 
 
 $ streamlit run ./src/apps/<app_name>frontend.py
 
-![UI Landing](./img/full-view.png)
+
+## Example Runs 
+
+lets look at some of the apps created by agents 
+![foo](./img/cat-fact.png)
+
+
 
 
 
