@@ -141,6 +141,19 @@ $ streamlit run ./src/apps/<app_name>frontend.py
 ## Example Runs 
 
 lets look at some of the apps created by agents 
+![cat fact enricher](./img/cat-fact.png)
+
+
+![local business investment analyzer](./img/local-business.png)
+
+
+![review-analyzer](./img/review-analyzer.png)
+
+
+![products and events](./img/products-events.png)
+![related products](./img/related-products.png)
+
+
 ![foo](./img/cat-fact.png)
 
 
