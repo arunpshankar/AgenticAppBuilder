@@ -154,9 +154,6 @@ lets look at some of the apps created by agents
 ![related products](./img/related-products.png)
 
 
-![foo](./img/cat-fact.png)
-
-
 
 
 
