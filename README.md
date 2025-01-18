@@ -94,8 +94,7 @@ For more information, visit [SerpApi's documentation](https://serpapi.com/search
 
 5. **Set Environment Variables**:
    ```bash
-   export PYTHONDONTWRITEBYTECODE=1
-   export PYTHONPATH=$PYTHONPATH:.
+   export PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PYTHONPATH:.
    ```
 
 6. **Configure API Keys**:
