@@ -169,16 +169,20 @@ This application fetches a random cat fact from the Cat Fact API and enriches it
 
 #
 
+Here’s the corrected version where the **Image Source Verification** app has no connection to the Cat Fact API:
+
+---
+
 ### **Image Source Verification**  
-This app fetches a random cat fact from the Cat Fact API and searches for a related image using the SERP API. It combines the results into a single, consolidated response.  
+This application verifies image sources by leveraging Google APIs. It searches for images related to a given query using the SERP API and retrieves multiple results. Extracted keywords from the initial results are then used to perform a secondary search through the Google Search API, ensuring verified image sources are included in the final output.
 
 ![Image Source Verification](./img/image-source-verify.png)  
 **Internal Reference:** [./src/apps/image_source_verification](./src/apps/image_source_verification)  
 
-#
+---
 
 ### **Local Business Investment Analyzer**  
-This application orchestrates API calls to gather local business information, detailed business data, and financial data using SERP API endpoints. The results are structured into a cohesive and actionable response.  
+This application analyzes local businesses for investment opportunities by combining data from multiple APIs. It searches for businesses using the Google Maps Search API, retrieves detailed profiles via the Google Local Basic Search API, and gathers financial insights from the Google Finance API. Results are consolidated into a cohesive and actionable response.
 
 ![Local Business Investment Analyzer](./img/local-business.png)  
 **Internal Reference:** [./src/apps/local_business_investment](./src/apps/local_business_investment)  
